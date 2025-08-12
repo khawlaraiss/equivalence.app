@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Renvoyer au professeur - {{ dossier.titre }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-arrow-down"></i> Renvoyer au professeur</h1>
+    <div>
+        <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left"></i> Retour au dossier
+        </a>
+    </div>
+</div>
+
+<!-- Informations du dossier -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informations du dossier</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Dossier :</strong> {{ dossier.titre }}</p>
+                <p><strong>Candidat :</strong> {{ candidat.nom }}</p>
+                <p><strong>Pays d'origine :</strong> {{ candidat.pays_origine }}</p>
+                <p><strong>Date de réception :</strong> {{ dossier.date_reception|date:"d/m/Y" }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Statut actuel :</strong> 
+                    <span class="badge bg-warning">{{ dossier.get_statut_display }}</span>
+                </p>
+                <p><strong>Professeur assigné :</strong> 
+                    {% for prof in dossier.professeurs.all %}
+                        {% if prof.role == 'professeur' %}
+                            {{ prof.get_full_name|default:prof.username }}
+                        {% endif %}
+                    {% endfor %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Décision antérieure (si applicable) -->
+{% if candidat.etat_dossier and candidat.etat_dossier.a_decision_anterieure %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-history"></i> Décision antérieure</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> Décision antérieure du {{ candidat.etat_dossier.date_decision_anterieure|date:"d/m/Y" }}</h6>
+            <p class="mb-0">{{ candidat.etat_dossier.decision_anterieure }}</p>
+        </div>
+        
+        {% if candidat.etat_dossier.pieces_demandees %}
+        <div class="mt-3">
+            <h6>Pièces demandées :</h6>
+            <div class="alert alert-warning">
+                <p class="mb-0">{{ candidat.etat_dossier.pieces_demandees }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Formulaire de renvoi -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-comment"></i> Message au professeur</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-success">
+            <h6><i class="fas fa-check-circle"></i> Confirmation</h6>
+            <p class="mb-0">
+                En renvoyant ce dossier au professeur, vous confirmez que le candidat a fourni les documents ou informations demandés dans la décision antérieure.
+                Le professeur pourra maintenant procéder à l'évaluation complète dans la consistance académique.
+            </p>
+        </div>
+        
+        <form method="post" class="mt-3">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="message_admin" class="form-label">
+                    <strong>Message au professeur :</strong>
+                </label>
+                <textarea name="message_admin" id="message_admin" class="form-control" rows="4" 
+                          placeholder="Exemple : Le candidat a fourni tous les documents demandés dans la décision antérieure. Vous pouvez maintenant procéder à l'évaluation complète dans la consistance académique."></textarea>
+                <div class="form-text">
+                    Ce message sera envoyé au professeur pour l'informer de la situation.
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-arrow-down"></i> Renvoyer au professeur
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

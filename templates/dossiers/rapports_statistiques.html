@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% block title %}Rapports et Statistiques{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-chart-bar"></i> Rapports et Statistiques</h1>
+    <div>
+        <a href="{% url 'dossiers:dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<!-- Statistiques générales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-folder fa-2x mb-2"></i>
+                <h3>{{ total_dossiers }}</h3>
+                <p class="card-text">Total dossiers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-sage-green) 0%, var(--color-dark-maroon) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <h3>{{ dossiers_non_traites }}</h3>
+                <p class="card-text">Non traités</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-muted-gold) 0%, var(--color-sage-green) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-spinner fa-2x mb-2"></i>
+                <h3>{{ dossiers_en_cours }}</h3>
+                <p class="card-text">En cours</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-light-taupe) 0%, var(--color-muted-gold) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <h3>{{ dossiers_traites }}</h3>
+                <p class="card-text">Traités</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques des évaluations -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-graduation-cap"></i> Statistiques des Évaluations</h5>
+                <small class="text-muted">Ordre logique : du meilleur score au plus faible</small>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-2">
+                        <div class="border rounded p-2">
+                            <h5 class="text-success mb-1">{{ evaluations_completes }}</h5>
+                            <small class="text-muted">1. Équivalence accordée</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border rounded p-2">
+                            <h5 class="text-warning mb-1">{{ evaluations_conditionnelles }}</h5>
+                            <small class="text-muted">2. Complètement dossier</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border rounded p-2">
+                            <h5 class="text-info mb-1">{{ evaluations_invitation_soutenance }}</h5>
+                            <small class="text-muted">3. Invitation soutenance</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border rounded p-2">
+                            <h5 class="text-primary mb-1">{{ evaluations_invitation_concours }}</h5>
+                            <small class="text-muted">4. Invitation concours</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border rounded p-2">
+                            <h5 class="text-danger mb-1">{{ evaluations_refusees }}</h5>
+                            <small class="text-muted">5. Non équivalent</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-center">
+                    <h5>Score moyen: {{ moyenne_score }}/100</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-users"></i> Performance par Professeur</h5>
+            </div>
+            <div class="card-body">
+                {% if professeurs_stats %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Professeur</th>
+                                <th>Assignés</th>
+                                <th>Traités</th>
+                                <th>Taux</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in professeurs_stats %}
+                            <tr>
+                                <td>{{ stat.professeur.username }}</td>
+                                <td>{{ stat.dossiers_assignes }}</td>
+                                <td>{{ stat.dossiers_traites }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ stat.taux_traitement }}%; background-color: var(--color-sage-green);"
+                                             aria-valuenow="{{ stat.taux_traitement }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ stat.taux_traitement }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Aucun professeur trouvé</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Évolution mensuelle -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-chart-line"></i> Évolution Mensuelle des Dossiers</h5>
+    </div>
+    <div class="card-body">
+        {% if dossiers_par_mois %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Mois</th>
+                        <th>Total</th>
+                        <th>Non traités</th>
+                        <th>En cours</th>
+                        <th>Traités</th>
+                        <th>Taux de traitement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mois in dossiers_par_mois %}
+                    <tr>
+                        <td>{{ mois.mois|date:"F Y" }}</td>
+                        <td>{{ mois.total }}</td>
+                        <td>{{ mois.non_traites }}</td>
+                        <td>{{ mois.en_cours }}</td>
+                        <td>{{ mois.traites }}</td>
+                        <td>
+                            {% if mois.total > 0 %}
+                                {% widthratio mois.traites mois.total 100 %}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center">Aucune donnée disponible</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Graphique simple -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-chart-pie"></i> Répartition des Dossiers</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <canvas id="dossiersChart" width="400" height="200"></canvas>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center mb-2">
+                    <div style="width: 20px; height: 20px; background-color: #28a745; margin-right: 10px; border-radius: 3px;"></div>
+                    <span>Non traités ({{ dossiers_non_traites }})</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <div style="width: 20px; height: 20px; background-color: #ffc107; margin-right: 10px; border-radius: 3px;"></div>
+                    <span>En cours ({{ dossiers_en_cours }})</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <div style="width: 20px; height: 20px; background-color: #6c757d; margin-right: 10px; border-radius: 3px;"></div>
+                    <span>Traités ({{ dossiers_traites }})</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Vérifier que le canvas existe
+    const canvas = document.getElementById('dossiersChart');
+    if (!canvas) {
+        console.error('Canvas non trouvé');
+        return;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Contexte 2D non disponible');
+        return;
+    }
+    
+    // Données du graphique
+    const data = [{{ dossiers_non_traites }}, {{ dossiers_en_cours }}, {{ dossiers_traites }}];
+    const labels = ['Non traités', 'En cours', 'Traités'];
+    
+    // Couleurs fixes pour éviter les problèmes de variables CSS
+    const colors = ['#28a745', '#ffc107', '#6c757d']; // Vert, Jaune, Gris
+    
+    // Vérifier qu'il y a des données à afficher
+    if (data.every(val => val === 0)) {
+        // Afficher un message si aucune donnée
+        ctx.fillStyle = '#6c757d';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Aucune donnée', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    try {
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                    hoverBorderWidth: 4,
+                    hoverBorderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true
+                }
+            }
+        });
+        
+        console.log('Graphique créé avec succès:', chart);
+    } catch (error) {
+        console.error('Erreur lors de la création du graphique:', error);
+        // Fallback : afficher un message d'erreur
+        ctx.fillStyle = '#dc3545';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Erreur graphique', canvas.width / 2, canvas.height / 2);
+    }
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Profil - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-user"></i> Profil Utilisateur</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user-circle"></i> Informations Personnelles</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nom d'utilisateur</label>
+                    <p class="form-control-plaintext">{{ user.username }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nom complet</label>
+                    <p class="form-control-plaintext">{{ user.get_full_name|default:"Non renseigné" }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <p class="form-control-plaintext">{{ user.email|default:"Non renseigné" }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Rôle</label>
+                    <p>
+                        <span class="badge bg-{% if user.role == 'admin' %}primary{% else %}success{% endif %}">
+                            {{ user.get_role_display }}
+                        </span>
+                    </p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Date d'inscription</label>
+                    <p class="form-control-plaintext">{{ user.date_joined|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar"></i> Statistiques</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-primary">{{ total_dossiers }}</h3>
+                            <p class="text-muted">Total Dossiers</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-success">{{ dossiers_traites }}</h3>
+                            <p class="text-muted">Traités</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-warning">{{ dossiers_en_cours }}</h3>
+                            <p class="text-muted">En cours</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-danger">{{ dossiers_non_traites }}</h3>
+                            <p class="text-muted">Non traités</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

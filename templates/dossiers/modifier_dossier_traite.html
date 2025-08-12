@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier le Dossier Traité{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-edit"></i> Modifier le Dossier Traité</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Informations de base -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5><i class="fas fa-info-circle"></i> Informations de Base</h5>
+                                <hr>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="numero" class="form-label">Numéro *</label>
+                                    <input type="text" name="numero" id="numero" class="form-control" 
+                                           value="{{ dossier.numero }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="demandeur_candidat" class="form-label">Demandeur/Candidat *</label>
+                                    <input type="text" name="demandeur_candidat" id="demandeur_candidat" class="form-control" 
+                                           value="{{ dossier.demandeur_candidat }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="reference" class="form-label">Référence *</label>
+                                    <input type="text" name="reference" id="reference" class="form-control" 
+                                           value="{{ dossier.reference }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="date_envoi" class="form-label">Date d'envoi *</label>
+                                    <input type="date" name="date_envoi" id="date_envoi" class="form-control" 
+                                           value="{{ dossier.date_envoi|date:'Y-m-d' }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations de réception -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5><i class="fas fa-inbox"></i> Informations de Réception</h5>
+                                <hr>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="reference_reception" class="form-label">Référence de réception</label>
+                                    <input type="text" name="reference_reception" id="reference_reception" class="form-control" 
+                                           value="{{ dossier.reference_reception }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="date_reception" class="form-label">Date de réception *</label>
+                                    <input type="date" name="date_reception" id="date_reception" class="form-control" 
+                                           value="{{ dossier.date_reception|date:'Y-m-d' }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations académiques -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5><i class="fas fa-graduation-cap"></i> Informations Académiques</h5>
+                                <hr>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="diplome" class="form-label">Diplôme *</label>
+                                    <input type="text" name="diplome" id="diplome" class="form-control" 
+                                           value="{{ dossier.diplome }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="universite" class="form-label">Université *</label>
+                                    <input type="text" name="universite" id="universite" class="form-control" 
+                                           value="{{ dossier.universite }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="pays" class="form-label">Pays *</label>
+                                    <input type="text" name="pays" id="pays" class="form-control" 
+                                           value="{{ dossier.pays }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations de décision -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5><i class="fas fa-gavel"></i> Informations de Décision</h5>
+                                <hr>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="date_avis" class="form-label">Date de l'avis</label>
+                                    <input type="date" name="date_avis" id="date_avis" class="form-control" 
+                                           value="{% if dossier.date_avis %}{{ dossier.date_avis|date:'Y-m-d' }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="date_decision" class="form-label">Date de décision</label>
+                                    <input type="date" name="date_decision" id="date_decision" class="form-control" 
+                                           value="{% if dossier.date_decision %}{{ dossier.date_decision|date:'Y-m-d' }}{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="avis_commission" class="form-label">Avis de la commission *</label>
+                                    <textarea name="avis_commission" id="avis_commission" class="form-control" rows="4" required 
+                                              placeholder="Détails de l'avis de la commission...">{{ dossier.avis_commission }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Historique des réunions -->
+                        {% if dossier.reunions %}
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5><i class="fas fa-calendar-alt"></i> Historique des Réunions</h5>
+                                <hr>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Participants</th>
+                                                <th>Ordre du jour</th>
+                                                <th>Décisions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for reunion in dossier.reunions %}
+                                            <tr>
+                                                <td>{{ reunion.date }}</td>
+                                                <td>{{ reunion.participants }}</td>
+                                                <td>{{ reunion.ordre_du_jour|truncatechars:50 }}</td>
+                                                <td>{{ reunion.decisions|truncatechars:50 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'dossiers:dossiers_traites_admin' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </a>
+                            <a href="{% url 'dossiers:ajouter_reunion_dossier' dossier.id %}" class="btn btn-success me-md-2">
+                                <i class="fas fa-plus"></i> Ajouter réunion
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Enregistrer les modifications
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        background-color: var(--color-light-taupe);
+        border-bottom: 1px solid var(--color-muted-gold);
+    }
+    
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+        border: 1px solid #ced4da;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--color-dark-maroon);
+        box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: var(--color-dark-maroon);
+        border-color: var(--color-dark-maroon);
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--color-maroon);
+        border-color: var(--color-maroon);
+    }
+    
+    h5 {
+        color: var(--color-dark-maroon);
+        font-weight: 600;
+    }
+    
+    hr {
+        border-color: var(--color-muted-gold);
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+</style>
+{% endblock %} 

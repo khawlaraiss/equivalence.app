@@ -1,0 +1,863 @@
+{% extends 'base.html' %}
+
+{% block title %}Dossiers Traités{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-check-circle"></i> Dossiers Traités</h1>
+            <p class="text-muted mb-0">Gestion des dossiers d'équivalence déjà traités</p>
+        </div>
+                 <div>
+             <a href="{% url 'dossiers:ajouter_dossier_traite' %}" class="btn btn-primary me-2">
+                 <i class="fas fa-plus"></i> Nouveau dossier traité
+             </a>
+             <a href="{% url 'dossiers:import_csv_dossiers' %}" class="btn btn-success me-2">
+                 <i class="fas fa-file-csv"></i> Importer CSV
+             </a>
+             <a href="{% url 'dossiers:import_csv_auto' %}" class="btn btn-warning me-2" 
+                onclick="return confirm('Voulez-vous importer automatiquement tous les dossiers du fichier CSV ?')">
+                 <i class="fas fa-download"></i> Import Automatique
+             </a>
+             <button class="btn btn-success" id="btn-ajouter-reunion" onclick="activerModeSelection()">
+                 <i class="fas fa-calendar-plus"></i> Ajouter réunion
+             </button>
+             
+             <script>
+             function activerModeSelection() {
+                 // Masquer le bouton principal
+                 document.getElementById('btn-ajouter-reunion').style.display = 'none';
+                 
+                 // Afficher les boutons de contrôle
+                 document.getElementById('btn-confirmer-selection').style.display = 'inline-block';
+                 document.getElementById('btn-annuler-selection').style.display = 'inline-block';
+                 
+                 // Afficher toutes les checkboxes
+                 const checkboxes = document.querySelectorAll('.dossier-checkbox');
+                 const selectAll = document.getElementById('select-all-dossiers');
+                 
+                 checkboxes.forEach(cb => {
+                     cb.style.display = 'inline-block';
+                     cb.parentElement.style.display = 'table-cell';
+                 });
+                 
+                 if (selectAll) {
+                     selectAll.style.display = 'inline-block';
+                     selectAll.parentElement.style.display = 'table-cell';
+                 }
+                 
+                 // Ajouter message d'instruction
+                 const message = document.createElement('div');
+                 message.id = 'alert-selection';
+                 message.className = 'alert alert-info mt-3';
+                 message.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Mode sélection activé</strong> - Cochez les dossiers que vous voulez traiter en réunion.';
+                 
+                 const container = document.querySelector('.container-fluid');
+                 const firstCard = container.querySelector('.card');
+                 container.insertBefore(message, firstCard);
+             }
+             
+             function annulerSelection() {
+                 // Remettre bouton normal
+                 document.getElementById('btn-ajouter-reunion').style.display = 'inline-block';
+                 document.getElementById('btn-confirmer-selection').style.display = 'none';
+                 document.getElementById('btn-annuler-selection').style.display = 'none';
+                 
+                 // Cacher checkboxes
+                 const checkboxes = document.querySelectorAll('.dossier-checkbox');
+                 const selectAll = document.getElementById('select-all-dossiers');
+                 
+                 checkboxes.forEach(cb => {
+                     cb.checked = false;
+                     cb.style.display = 'none';
+                     cb.parentElement.style.display = 'none';
+                 });
+                 
+                 if (selectAll) {
+                     selectAll.checked = false;
+                     selectAll.style.display = 'none';
+                     selectAll.parentElement.style.display = 'none';
+                 }
+                 
+                 // Supprimer message
+                 const alertDiv = document.getElementById('alert-selection');
+                 if (alertDiv) alertDiv.remove();
+             }
+             
+             function confirmerSelection() {
+                 const checkboxes = document.querySelectorAll('.dossier-checkbox:checked');
+                 
+                 if (checkboxes.length === 0) {
+                     alert('Veuillez sélectionner au moins un dossier avant de confirmer.');
+                     return;
+                 }
+                 
+                 // Récupérer les IDs des dossiers sélectionnés
+                 const dossiersIds = Array.from(checkboxes).map(cb => cb.value).join(',');
+                 
+                 // Rediriger vers la page de création de réunion
+                 window.location.href = `/dossiers/dossiers-traites/creer-reunion-form/?dossiers_ids=${dossiersIds}`;
+             }
+             
+             function updateCompteur() {
+                 const checkboxes = document.querySelectorAll('.dossier-checkbox:checked');
+                 const compteur = document.getElementById('compteur-dossiers');
+                 if (compteur) {
+                     compteur.textContent = checkboxes.length;
+                 }
+             }
+             </script>
+             
+
+             <button class="btn btn-primary" id="btn-confirmer-selection" style="display: none;" onclick="confirmerSelection()">
+                 <i class="fas fa-check"></i> Confirmer sélection
+                 <span id="compteur-dossiers" class="badge bg-light text-dark ms-1">0</span>
+             </button>
+             <button class="btn btn-secondary" id="btn-annuler-selection" style="display: none;" onclick="annulerSelection()">
+                 <i class="fas fa-times"></i> Annuler
+             </button>
+         </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);">
+                <div class="card-body text-center">
+                    <i class="fas fa-folder-check fa-2x mb-2"></i>
+                    <h3 class="card-title">{{ total_dossiers }}</h3>
+                    <p class="card-text">Total dossiers traités</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, var(--color-muted-gold) 0%, var(--color-dark-maroon) 100%);">
+                <div class="card-body text-center">
+                    <i class="fas fa-globe fa-2x mb-2"></i>
+                    <h3 class="card-title">{{ pays_uniques|length }}</h3>
+                    <p class="card-text">Pays différents</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, var(--color-light-taupe) 0%, var(--color-sage-green) 100%);">
+                <div class="card-body text-center">
+                    <i class="fas fa-university fa-2x mb-2"></i>
+                    <h3 class="card-title">{{ universites_uniques|length }}</h3>
+                    <p class="card-text">Universités</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background: linear-gradient(135deg, var(--color-sage-green) 0%, var(--color-muted-gold) 100%);">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                    <h3 class="card-title">{{ page_obj.paginator.count }}</h3>
+                    <p class="card-text">Affichés</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row">
+                <div class="col-md-3">
+                    <label for="recherche" class="form-label">Recherche</label>
+                    <input type="text" name="recherche" id="recherche" class="form-control" 
+                           value="{{ recherche }}" placeholder="Candidat, numéro, référence...">
+                </div>
+                <div class="col-md-3">
+                    <label for="pays" class="form-label">Pays</label>
+                    <select name="pays" id="pays" class="form-select">
+                        <option value="">Tous les pays</option>
+                        {% for pays in pays_uniques %}
+                            <option value="{{ pays }}" {% if pays_filter == pays %}selected{% endif %}>{{ pays }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="universite" class="form-label">Université</label>
+                    <select name="universite" id="universite" class="form-select">
+                        <option value="">Toutes les universités</option>
+                        {% for universite in universites_uniques %}
+                            <option value="{{ universite }}" {% if universite_filter == universite %}selected{% endif %}>{{ universite }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'dossiers:dossiers_traites_admin' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau des dossiers traités -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-table"></i> Liste des Dossiers Traités</h5>
+        </div>
+        <div class="card-body">
+            {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th style="display: none;">
+                                    <input type="checkbox" id="select-all-dossiers" onchange="toggleAllDossiers()" style="display: none;">
+                                </th>
+                                <th>N°</th>
+                                <th>Demandeur/Candidat</th>
+                                <th>Référence</th>
+                                <th>Date d'envoi</th>
+                                <th>Référence réception</th>
+                                <th>Date réception</th>
+                                <th>Diplôme</th>
+                                <th>Université</th>
+                                <th>Pays</th>
+                                <th>Date avis</th>
+                                <th>Avis commission</th>
+                                <th>Date décision</th>
+                                <th>Réunions</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dossier in page_obj %}
+                            <tr>
+                                <td style="display: none;">
+                                    <input type="checkbox" class="dossier-checkbox" value="{{ dossier.id }}" onchange="updateCompteur()" style="display: none;">
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ dossier.numero }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ dossier.demandeur_candidat }}</strong>
+                                </td>
+                                <td>{{ dossier.reference }}</td>
+                                <td>{{ dossier.date_envoi|date:"d/m/Y" }}</td>
+                                <td>{{ dossier.reference_reception|default:"-" }}</td>
+                                <td>{{ dossier.date_reception|date:"d/m/Y" }}</td>
+                                <td>{{ dossier.diplome }}</td>
+                                <td>{{ dossier.universite }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ dossier.pays }}</span>
+                                </td>
+                                <td>{{ dossier.date_avis|date:"d/m/Y"|default:"-" }}</td>
+                                <td>
+                                    {% if dossier.avis_commission and dossier.avis_commission != "Avis non spécifié" %}
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-success me-2">Avis</span>
+                                            <span class="text-truncate d-inline-block" style="max-width: 120px;" 
+                                                  title="{{ dossier.avis_commission }}">
+                                                {{ dossier.avis_commission|truncatechars:40 }}
+                                            </span>
+                                            <button type="button" class="btn btn-sm btn-outline-info ms-1" 
+                                                    data-bs-toggle="modal" data-bs-target="#avisModal{{ dossier.id }}" 
+                                                    title="Voir l'avis complet">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Modal pour l'avis complet -->
+                                        <div class="modal fade" id="avisModal{{ dossier.id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">
+                                                            <i class="fas fa-comment"></i> Avis de la Commission
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <strong>Dossier:</strong> {{ dossier.numero }}
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <strong>Candidat:</strong> {{ dossier.demandeur_candidat }}
+                                                            </div>
+                                                        </div>
+                                                        <hr>
+                                                        <div class="alert alert-info">
+                                                            <strong>Avis de la commission:</strong><br>
+                                                            {{ dossier.avis_commission|linebreaks }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">Aucun avis</span>
+                                    {% endif %}
+                                </td>
+                                                                 <td>{{ dossier.date_decision|date:"d/m/Y"|default:"-" }}</td>
+                                 <td>
+                                     <div class="d-flex align-items-center">
+                                         <span class="badge bg-warning me-2">{{ dossier.get_nombre_reunions }}</span>
+                                         {% if dossier.reunions %}
+                                             <a href="{% url 'dossiers:voir_reunions_dossier' dossier.id %}" 
+                                                class="btn btn-sm btn-outline-info" title="Voir les réunions">
+                                                 <i class="fas fa-eye"></i>
+                                             </a>
+                                         {% endif %}
+                                     </div>
+                                 </td>
+                                 <td>
+                                     <div class="btn-group" role="group">
+                                         <a href="{% url 'dossiers:voir_details_traitement' dossier.id %}" 
+                                            class="btn btn-sm btn-outline-secondary" title="Voir détails traitement">
+                                             <i class="fas fa-search"></i>
+                                         </a>
+                                         <a href="{% url 'dossiers:modifier_dossier_traite' dossier.id %}" 
+                                            class="btn btn-sm btn-outline-primary" title="Modifier">
+                                             <i class="fas fa-edit"></i>
+                                         </a>
+                                         
+                                         {% if dossier.avis_commission and dossier.avis_commission != "Avis non spécifié" %}
+                                         <a href="{% url 'dossiers:voir_avis_commission' dossier.id %}" 
+                                            class="btn btn-sm btn-outline-info" title="Voir avis commission">
+                                             <i class="fas fa-comment"></i>
+                                         </a>
+                                         {% endif %}
+                                         <a href="{% url 'dossiers:renvoyer_dossier_traite_au_professeur' dossier.id %}" 
+                                            class="btn btn-sm btn-outline-warning" title="Renvoyer au professeur">
+                                             <i class="fas fa-arrow-down"></i>
+                                         </a>
+                                         <a href="{% url 'dossiers:supprimer_dossier_traite' dossier.id %}" 
+                                            class="btn btn-sm btn-outline-danger" title="Supprimer le dossier traité">
+                                             <i class="fas fa-trash"></i>
+                                         </a>
+                                     </div>
+                                 </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Pagination des dossiers traités">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if recherche %}&recherche={{ recherche }}{% endif %}{% if pays_filter %}&pays={{ pays_filter }}{% endif %}{% if universite_filter %}&universite={{ universite_filter }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if recherche %}&recherche={{ recherche }}{% endif %}{% if pays_filter %}&pays={{ pays_filter }}{% endif %}{% if universite_filter %}&universite={{ universite_filter }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if recherche %}&recherche={{ recherche }}{% endif %}{% if pays_filter %}&pays={{ pays_filter }}{% endif %}{% if universite_filter %}&universite={{ universite_filter }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if recherche %}&recherche={{ recherche }}{% endif %}{% if pays_filter %}&pays={{ pays_filter }}{% endif %}{% if universite_filter %}&universite={{ universite_filter }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if recherche %}&recherche={{ recherche }}{% endif %}{% if pays_filter %}&pays={{ pays_filter }}{% endif %}{% if universite_filter %}&universite={{ universite_filter }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">Aucun dossier traité trouvé</h4>
+                    <p class="text-muted">Commencez par ajouter votre premier dossier traité</p>
+                    <a href="{% url 'dossiers:ajouter_dossier_traite' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter un dossier traité
+                    </a>
+                </div>
+                         {% endif %}
+         </div>
+     </div>
+ </div>
+
+
+ {% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        background-color: var(--color-light-taupe);
+        border-bottom: 1px solid var(--color-muted-gold);
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: var(--color-dark-maroon);
+        background-color: #f8f9fa;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .btn-group .btn {
+        margin-right: 0.25rem;
+    }
+    
+    .badge {
+        font-size: 0.875em;
+    }
+    
+    .text-truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .mode-selection {
+        border: 2px solid #28a745;
+        border-radius: 5px;
+        background-color: #f8fff9;
+    }
+    
+    .mode-selection th, .mode-selection td {
+        background-color: #f8fff9 !important;
+    }
+</style>
+
+<script>
+// Variables globales
+let modeSelectionActif = false;
+
+// Fonction pour activer le mode sélection
+function activerModeSelection() {
+    console.log('Mode sélection activé');
+    modeSelectionActif = true;
+    
+    // Masquer le bouton principal
+    document.getElementById('btn-ajouter-reunion').style.display = 'none';
+    
+    // Afficher les boutons de contrôle
+    document.getElementById('btn-confirmer-selection').style.display = 'inline-block';
+    document.getElementById('btn-annuler-selection').style.display = 'inline-block';
+    
+    // Afficher toutes les checkboxes
+    const checkboxes = document.querySelectorAll('.dossier-checkbox');
+    const selectAll = document.getElementById('select-all-dossiers');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.style.display = 'inline-block';
+        checkbox.parentElement.style.display = 'table-cell';
+    });
+    
+    if (selectAll) {
+        selectAll.style.display = 'inline-block';
+        selectAll.parentElement.style.display = 'table-cell';
+    }
+    
+    // Ajouter style visuel
+    const table = document.querySelector('.table');
+    if (table) {
+        table.classList.add('mode-selection');
+    }
+    
+    // Afficher message d'instruction
+    const alertDiv = document.createElement('div');
+    alertDiv.id = 'alert-selection';
+    alertDiv.className = 'alert alert-info mt-3';
+    alertDiv.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Mode sélection activé</strong> - Cochez les dossiers que vous voulez traiter en réunion, puis cliquez "Confirmer sélection".';
+    
+    const container = document.querySelector('.container-fluid');
+    const firstCard = container.querySelector('.card');
+    container.insertBefore(alertDiv, firstCard);
+    
+    updateCompteur();
+}
+
+// Fonction pour annuler la sélection
+function annulerSelection() {
+    console.log('Annulation sélection');
+    modeSelectionActif = false;
+    
+    // Remettre boutons normaux
+    document.getElementById('btn-ajouter-reunion').style.display = 'inline-block';
+    document.getElementById('btn-confirmer-selection').style.display = 'none';
+    document.getElementById('btn-annuler-selection').style.display = 'none';
+    
+    // Cacher checkboxes
+    const checkboxes = document.querySelectorAll('.dossier-checkbox');
+    const selectAll = document.getElementById('select-all-dossiers');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.style.display = 'none';
+        checkbox.parentElement.style.display = 'none';
+    });
+    
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.style.display = 'none';
+        selectAll.parentElement.style.display = 'none';
+    }
+    
+    // Retirer style visuel
+    const table = document.querySelector('.table');
+    if (table) {
+        table.classList.remove('mode-selection');
+    }
+    
+    // Supprimer message
+    const alertDiv = document.getElementById('alert-selection');
+    if (alertDiv) {
+        alertDiv.remove();
+    }
+}
+
+// Fonction pour confirmer la sélection
+function confirmerSelection() {
+    const checkboxes = document.querySelectorAll('.dossier-checkbox:checked');
+    
+    if (checkboxes.length === 0) {
+        alert('Veuillez sélectionner au moins un dossier avant de confirmer.');
+        return;
+    }
+    
+    // Récupérer les IDs des dossiers sélectionnés
+    const dossiersIds = Array.from(checkboxes).map(cb => cb.value).join(',');
+    
+    // Rediriger vers la page de création de réunion
+    window.location.href = `/dossiers/dossiers-traites/creer-reunion-form/?dossiers_ids=${dossiersIds}`;
+}
+
+// Fonction pour sélectionner/désélectionner tous
+function toggleAllDossiers() {
+    const selectAll = document.getElementById('select-all-dossiers');
+    const checkboxes = document.querySelectorAll('.dossier-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateCompteur();
+}
+
+// Fonction pour mettre à jour le compteur
+function updateCompteur() {
+    const checkboxes = document.querySelectorAll('.dossier-checkbox:checked');
+    const compteur = document.getElementById('compteur-dossiers');
+    
+    if (compteur) {
+        compteur.textContent = checkboxes.length;
+    }
+}
+
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Système de réunions chargé');
+    
+    // Event listeners pour les boutons
+    const btnReunion = document.getElementById('btn-ajouter-reunion');
+    const btnConfirmer = document.getElementById('btn-confirmer-selection');
+    const btnAnnuler = document.getElementById('btn-annuler-selection');
+    
+    if (btnReunion) {
+        btnReunion.addEventListener('click', function(e) {
+            e.preventDefault();
+            activerModeSelection();
+        });
+    }
+    
+    if (btnConfirmer) {
+        btnConfirmer.addEventListener('click', function(e) {
+            e.preventDefault();
+            confirmerSelection();
+        });
+    }
+    
+    if (btnAnnuler) {
+        btnAnnuler.addEventListener('click', function(e) {
+            e.preventDefault();
+            annulerSelection();
+        });
+    }
+    
+    // Cacher les checkboxes au démarrage
+    const checkboxes = document.querySelectorAll('.dossier-checkbox');
+    const selectAll = document.getElementById('select-all-dossiers');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.style.display = 'none';
+        checkbox.parentElement.style.display = 'none';
+    });
+    
+    if (selectAll) {
+        selectAll.style.display = 'none';
+        selectAll.parentElement.style.display = 'none';
+    }
+});
+</script>
+
+<!-- Modal pour créer une réunion avec plusieurs dossiers -->
+<div class="modal fade" id="modalReunionMultiple" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-plus"></i> Créer une réunion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'dossiers:creer_reunion_multiple' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Titre de la réunion</label>
+                        <input type="text" class="form-control" name="titre" required 
+                               placeholder="Ex: Réunion d'évaluation du 15/01/2025">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Date de la réunion</label>
+                        <input type="datetime-local" class="form-control" name="date_reunion" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3" 
+                                  placeholder="Description de la réunion..."></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="info-dossiers-selection">Aucun dossier sélectionné</span>
+                    </div>
+                    
+                    <input type="hidden" name="dossiers_ids" id="dossiers-ids-input">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success" id="btn-creer-reunion" disabled>
+                        <i class="fas fa-calendar-plus"></i> Créer la réunion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAllDossiers() {
+    const selectAll = document.getElementById('select-all-dossiers');
+    const checkboxes = document.querySelectorAll('.dossier-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateCompteur();
+}
+
+function updateCompteur() {
+    const checkboxes = document.querySelectorAll('.dossier-checkbox:checked');
+    const compteur = document.getElementById('compteur-dossiers');
+    const btnReunion = compteur.parentElement;
+    
+    if (checkboxes.length > 0) {
+        compteur.textContent = checkboxes.length;
+        compteur.style.display = 'inline';
+        btnReunion.classList.remove('btn-success');
+        btnReunion.classList.add('btn-primary');
+    } else {
+        compteur.style.display = 'none';
+        btnReunion.classList.remove('btn-primary');
+        btnReunion.classList.add('btn-success');
+    }
+}
+
+let modeSelectionActif = false;
+
+function activerModeSelection() {
+    console.log('Activation du mode sélection');
+    alert('Mode sélection activé !'); // Test visible
+    modeSelectionActif = true;
+    
+    // Cacher le bouton "Ajouter réunion"
+    document.getElementById('btn-ajouter-reunion').style.display = 'none';
+    
+    // Afficher les boutons de confirmation
+    document.getElementById('btn-confirmer-selection').style.display = 'inline-block';
+    document.getElementById('btn-annuler-selection').style.display = 'inline-block';
+    
+    // Afficher les checkboxes
+    const checkboxes = document.querySelectorAll('.dossier-checkbox');
+    const selectAll = document.getElementById('select-all-dossiers');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.style.display = 'inline-block';
+        checkbox.parentElement.style.display = 'table-cell';
+    });
+    selectAll.style.display = 'inline-block';
+    selectAll.parentElement.style.display = 'table-cell';
+    
+    // Ajouter une classe pour highlighting
+    document.querySelector('.table').classList.add('mode-selection');
+    
+    // Mettre à jour le compteur
+    updateCompteur();
+    
+    // Afficher un message d'instruction
+    const alertDiv = document.createElement('div');
+    alertDiv.id = 'alert-selection';
+    alertDiv.className = 'alert alert-info';
+    alertDiv.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Mode sélection activé</strong> - Cochez les dossiers que vous voulez inclure dans la réunion, puis cliquez "Confirmer sélection".';
+    
+    // Insérer l'alerte après l'en-tête
+    const header = document.querySelector('.d-flex.justify-content-between.align-items-center');
+    header.parentNode.insertBefore(alertDiv, header.nextSibling);
+}
+
+function annulerSelection() {
+    console.log('Annulation de la sélection');
+    modeSelectionActif = false;
+    
+    // Remettre les boutons normaux
+    document.getElementById('btn-ajouter-reunion').style.display = 'inline-block';
+    document.getElementById('btn-confirmer-selection').style.display = 'none';
+    document.getElementById('btn-annuler-selection').style.display = 'none';
+    
+    // Cacher les checkboxes
+    const checkboxes = document.querySelectorAll('.dossier-checkbox');
+    const selectAll = document.getElementById('select-all-dossiers');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.style.display = 'none';
+        checkbox.parentElement.style.display = 'none';
+    });
+    selectAll.checked = false;
+    selectAll.style.display = 'none';
+    selectAll.parentElement.style.display = 'none';
+    
+    // Retirer la classe highlighting
+    document.querySelector('.table').classList.remove('mode-selection');
+    
+    // Supprimer l'alerte
+    const alertDiv = document.getElementById('alert-selection');
+    if (alertDiv) {
+        alertDiv.remove();
+    }
+}
+
+function confirmerSelection() {
+    const checkboxes = document.querySelectorAll('.dossier-checkbox:checked');
+    
+    if (checkboxes.length === 0) {
+        alert('Veuillez sélectionner au moins un dossier avant de confirmer.');
+        return;
+    }
+    
+    // Préparer les IDs des dossiers sélectionnés
+    const dossiersIds = Array.from(checkboxes).map(cb => cb.value).join(',');
+    
+    // Rediriger vers la page de création de réunion
+    window.location.href = `/dossiers/dossiers-traites/creer-reunion-form/?dossiers_ids=${dossiersIds}`;
+}
+
+// Initialiser le compteur au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded'); // Debug
+    updateCompteur();
+    
+    // Ajouter event listeners pour tous les boutons
+    const btnReunion = document.getElementById('btn-ajouter-reunion');
+    const btnConfirmer = document.getElementById('btn-confirmer-selection');
+    const btnAnnuler = document.getElementById('btn-annuler-selection');
+    
+    if (btnReunion) {
+        console.log('Bouton Ajouter réunion trouvé'); // Debug
+        btnReunion.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Click détecté - Activation mode sélection'); // Debug
+            activerModeSelection();
+        });
+    } else {
+        console.error('Bouton btn-ajouter-reunion non trouvé');
+    }
+    
+    if (btnConfirmer) {
+        btnConfirmer.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Click détecté - Confirmation sélection');
+            confirmerSelection();
+        });
+    }
+    
+    if (btnAnnuler) {
+        btnAnnuler.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Click détecté - Annulation sélection');
+            annulerSelection();
+        });
+    }
+    
+    // Cacher les checkboxes au chargement
+    cacherCheckboxes();
+});
+
+function cacherCheckboxes() {
+    const checkboxes = document.querySelectorAll('.dossier-checkbox');
+    const selectAll = document.getElementById('select-all-dossiers');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.style.display = 'none';
+        checkbox.parentElement.style.display = 'none';
+    });
+    
+    if (selectAll) {
+        selectAll.style.display = 'none';
+        selectAll.parentElement.style.display = 'none';
+    }
+}
+</script>
+
+{% endblock %} 

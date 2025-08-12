@@ -1,0 +1,519 @@
+{% extends 'base.html' %}
+
+{% block title %}Dossier - {{ dossier.titre }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-folder-open"></i> {{ dossier.titre }}</h1>
+    <div>
+        <a href="{% url 'dossiers:admin_dossiers' %}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        {% if user.role == 'professeur' %}
+            <a href="{% url 'dossiers:creer_evaluation' dossier.id %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Créer Évaluation
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Informations du dossier -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Informations du dossier</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Titre</label>
+                        <p class="form-control-plaintext">{{ dossier.titre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Statut</label>
+                        <p>
+                            <span class="badge bg-{% if dossier.statut == 'non_traite' %}warning{% elif dossier.statut == 'en_cours' %}info{% elif dossier.statut == 'traite' %}success{% else %}secondary{% endif %}">
+                                {{ dossier.get_statut_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Date de réception</label>
+                        <p class="form-control-plaintext">{{ dossier.date_reception|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Professeurs assignés</label>
+                        <p>
+                            {% for professeur in dossier.professeurs.all %}
+                                <span class="badge bg-light text-dark me-1">{{ professeur.username }}</span>
+                            {% empty %}
+                                <span class="text-muted">Aucun professeur assigné</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+                </div>
+                {% if dossier.description %}
+                <div class="row">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Description</label>
+                        <p class="form-control-plaintext">{{ dossier.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-tasks"></i> Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user.role == 'admin' %}
+                        <a href="{% url 'dossiers:affecter_dossier' dossier.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-plus"></i> Affecter des professeurs
+                        </a>
+                        {% if a_evaluation and dossier.statut != 'traite' %}
+                        <a href="{% url 'dossiers:valider_et_transferer_dossier' dossier.id %}" class="btn btn-outline-success">
+                            <i class="fas fa-check-circle"></i> Valider et transférer
+                        </a>
+                        {% endif %}
+                        {% if candidat and candidat.etat_dossier and candidat.etat_dossier.a_decision_anterieure %}
+                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#renvoyerProfesseurModal">
+                            <i class="fas fa-arrow-down"></i> Renvoyer au professeur
+                        </button>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if user.role == 'professeur' and dossier.statut != 'traite' %}
+                        <a href="{% url 'dossiers:traiter_dossier' dossier.id %}" class="btn btn-outline-success">
+                            <i class="fas fa-check"></i> Traiter le dossier
+                        </a>
+                        <a href="{% url 'dossiers:ajouter_rapport' dossier.id %}" class="btn btn-outline-info">
+                            <i class="fas fa-file-alt"></i> Ajouter un rapport
+                        </a>
+                    {% endif %}
+                    
+                                         {% if a_evaluation %}
+                         <a href="{% url 'dossiers:evaluation_equivalence' dossier.id %}" class="btn btn-outline-warning">
+                             <i class="fas fa-graduation-cap"></i> Voir l'évaluation
+                         </a>
+                                              {% if user.role == 'professeur' %}
+                          <a href="{% url 'dossiers:etat_dossier' dossier.id %}" class="btn btn-outline-warning">
+                              <i class="fas fa-clipboard-list"></i> Grille d'évaluation des dossiers
+                          </a>
+                          
+                      {% endif %}
+                    {% elif user.role == 'professeur' %}
+                        <div class="alert alert-info mb-2">
+                            <i class="fas fa-info-circle"></i>
+                            <small>Vous n'avez pas encore effectué le traitement du dossier</small>
+                        </div>
+                        <a href="{% url 'dossiers:etat_dossier' dossier.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-clipboard-check"></i> Aller au traitement du dossier
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Décision antérieure -->
+{% if candidat.etat_dossier and candidat.etat_dossier.a_decision_anterieure and afficher_decision_anterieure %}
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5><i class="fas fa-history"></i> Décision antérieure</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Date de la décision antérieure :</strong> {{ candidat.etat_dossier.date_decision_anterieure|date:"d/m/Y"|default:"Non spécifiée" }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Statut :</strong> <span class="badge bg-warning">Décision antérieure</span></p>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <h6>Détails de la décision antérieure :</h6>
+            <div class="alert alert-warning">
+                <p class="mb-0">{{ candidat.etat_dossier.decision_anterieure|default:"Aucun détail disponible" }}</p>
+            </div>
+        </div>
+        
+
+    </div>
+</div>
+{% endif %}
+
+<!-- Évaluation d'équivalence -->
+{% if a_evaluation or consistance %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-graduation-cap"></i> Évaluation d'équivalence</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Informations du dossier</h6>
+                <p><strong>Référence :</strong> {{ dossier.titre }}</p>
+                <p><strong>Date de référence :</strong> {{ dossier.date_reception|date:"d/m/Y"|default:"Non spécifiée" }}</p>
+                {% if dossier.candidat %}
+                    <p><strong>Date d'arrivée du dossier :</strong> {{ dossier.candidat.date_arrivee|date:"d/m/Y" }}</p>
+                {% else %}
+                    <p class="text-muted">Informations du candidat non disponibles</p>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <h6>Décision de la commission</h6>
+                {% if dossier.candidat and dossier.candidat.decision %}
+                    <p><strong>Score :</strong> {{ dossier.candidat.decision.score_total }}/100</p>
+                    <p><strong>Décision :</strong> 
+                        <span class="badge bg-{% if dossier.candidat.decision.decision == 'equivalence_accorder' %}success{% elif dossier.candidat.decision.decision == 'completement_dossier' %}warning{% elif dossier.candidat.decision.decision == 'invitation_soutenance' %}info{% elif dossier.candidat.decision.decision == 'invitation_concours' %}primary{% else %}danger{% endif %}">
+                            {{ dossier.candidat.decision.get_decision_display }}
+                        </span>
+                    </p>
+                    <a href="{% url 'dossiers:evaluation_equivalence' dossier.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye"></i> Voir l'évaluation complète
+                    </a>
+                {% else %}
+                    <p class="text-muted">Aucune décision enregistrée</p>
+                {% endif %}
+                
+                {% if user.role == 'admin' %}
+                <div class="mt-3">
+                    <a href="{% url 'dossiers:evaluation_equivalence' dossier.id %}" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i> Voir l'évaluation détaillée
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Notes de la consistance académique (masquées si décision antérieure) -->
+        {% if consistance and not decision_anterieure_info %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <h6><i class="fas fa-chart-bar"></i> Notes de la consistance académique</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Critère</th>
+                                <th>Note</th>
+                                <th>Note max</th>
+                                <th>Pourcentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if consistance.sciences_geodesiques_note is not None %}
+                            <tr>
+                                <td><strong>Sciences géodésiques</strong></td>
+                                <td>{{ consistance.sciences_geodesiques_note }}/16</td>
+                                <td>16</td>
+                                <td>{% widthratio consistance.sciences_geodesiques_note 16 100 %}%</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if consistance.topographie_note is not None %}
+                            <tr>
+                                <td><strong>Topographie</strong></td>
+                                <td>{{ consistance.topographie_note }}/16</td>
+                                <td>16</td>
+                                <td>{% widthratio consistance.topographie_note 16 100 %}%</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if consistance.photogrammetrie_note is not None %}
+                            <tr>
+                                <td><strong>Photogrammétrie</strong></td>
+                                <td>{{ consistance.photogrammetrie_note }}/16</td>
+                                <td>16</td>
+                                <td>{% widthratio consistance.photogrammetrie_note 16 100 %}%</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if consistance.cartographie_note is not None %}
+                            <tr>
+                                <td><strong>Cartographie</strong></td>
+                                <td>{{ consistance.cartographie_note }}/16</td>
+                                <td>16</td>
+                                <td>{% widthratio consistance.cartographie_note 16 100 %}%</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if consistance.droit_foncier_note is not None %}
+                            <tr>
+                                <td><strong>Droit foncier</strong></td>
+                                <td>{{ consistance.droit_foncier_note }}/10</td>
+                                <td>10</td>
+                                <td>{% widthratio consistance.droit_foncier_note 10 100 %}%</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if consistance.sig_note is not None %}
+                            <tr>
+                                <td><strong>SIG</strong></td>
+                                <td>{{ consistance.sig_note }}/10</td>
+                                <td>10</td>
+                                <td>{% widthratio consistance.sig_note 10 100 %}%</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if consistance.teledetection_note is not None %}
+                            <tr>
+                                <td><strong>Télédétection</strong></td>
+                                <td>{{ consistance.teledetection_note }}/10</td>
+                                <td>10</td>
+                                <td>{% widthratio consistance.teledetection_note 10 100 %}%</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if consistance.stages_note is not None %}
+                            <tr>
+                                <td><strong>Stages</strong></td>
+                                <td>{{ consistance.stages_note }}/10</td>
+                                <td>10</td>
+                                <td>{% widthratio consistance.stages_note 10 100 %}%</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% for critere in consistance.criteres_personnalises %}
+                            {% if critere.note is not None %}
+                            <tr>
+                                <td><strong>{{ critere.nom }}</strong></td>
+                                <td>{{ critere.note }}/{{ critere.note_max }}</td>
+                                <td>{{ critere.note_max }}</td>
+                                <td>{% widthratio critere.note critere.note_max 100 %}%</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                            
+                            <tr class="table-info">
+                                <td><strong>TOTAL</strong></td>
+                                <td><strong>{{ consistance.note_totale }}/100</strong></td>
+                                <td>100</td>
+                                <td><strong>{{ consistance.note_totale }}%</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Section pour créer une grille d'évaluation -->
+{% if user.role == 'professeur' %}
+<div class="card mb-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+        <h5><i class="fas fa-exclamation-triangle"></i> Grille d'Évaluation Manquante</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> Information</h6>
+            <p>Ce dossier n'a pas encore de grille d'évaluation d'équivalence. En tant que professeur, vous pouvez :</p>
+            <ul>
+                <li><strong>Créer automatiquement</strong> une grille d'évaluation avec des valeurs par défaut</li>
+                <li><strong>Modifier ensuite</strong> toutes les informations selon votre analyse</li>
+                <li><strong>Évaluer les compétences</strong> selon les critères établis</li>
+            </ul>
+        </div>
+        <div class="text-center">
+            <a href="{% url 'dossiers:etat_dossier' dossier.id %}" class="btn btn-warning btn-lg">
+                <i class="fas fa-clipboard-check"></i> Aller au traitement du dossier
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Pièces jointes -->
+{% if dossier.pieces_jointes.all %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-paperclip"></i> Pièces jointes</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Fichier</th>
+                        <th>Description</th>
+                        <th>Date d'ajout</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for piece in dossier.pieces_jointes.all %}
+                    <tr>
+                        <td>{{ piece.fichier.name|slice:"15:" }}</td>
+                        <td>{{ piece.description }}</td>
+                        <td>{{ piece.date_ajout|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a href="{{ piece.fichier.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-download"></i> Télécharger
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+
+<!-- Rapport d'analyse -->
+{% if dossier.rapport %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-file-alt"></i> Rapport d'analyse</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Auteur :</strong> {{ dossier.rapport.auteur.username }}</p>
+                <p><strong>Date :</strong> {{ dossier.rapport.date_rapport|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div class="col-md-6">
+                {% if dossier.rapport.document %}
+                    <a href="{{ dossier.rapport.document.url }}" class="btn btn-outline-primary" target="_blank">
+                        <i class="fas fa-download"></i> Télécharger le rapport
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="mt-3">
+            <h6>Contenu :</h6>
+            <div class="border p-3 bg-light">
+                {{ dossier.rapport.contenu|linebreaks }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Historique des actions -->
+{% if dossier.historiques.all %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-history"></i> Historique des actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="timeline">
+            {% for action in dossier.historiques.all|slice:":10" %}
+            <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <h6>{{ action.action }}</h6>
+                    <p class="text-muted">
+                        Par {{ action.utilisateur.username }} le {{ action.date_action|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal pour renvoyer au professeur -->
+{% if candidat and candidat.etat_dossier and candidat.etat_dossier.a_decision_anterieure %}
+<div class="modal fade" id="renvoyerProfesseurModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-arrow-down"></i> Renvoyer au professeur
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Information</h6>
+                    <p class="mb-0">
+                        En renvoyant ce dossier au professeur, vous lui permettez de faire une nouvelle évaluation complète 
+                        dans la consistance académique. Le professeur pourra réévaluer tous les critères.
+                    </p>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Décision antérieure :</h6>
+                    <div class="alert alert-warning">
+                        <p class="mb-0">{{ candidat.etat_dossier.decision_anterieure|default:"Aucun détail disponible" }}</p>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <label for="message_admin" class="form-label">Message au professeur (optionnel) :</label>
+                    <textarea class="form-control" id="message_admin" name="message_admin" rows="3" 
+                              placeholder="Expliquez pourquoi vous renvoyez ce dossier au professeur..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+                <form method="post" action="{% url 'dossiers:renvoyer_au_professeur' dossier.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="message_admin" id="message_admin_hidden">
+                    <button type="submit" class="btn btn-success" onclick="submitRenvoyer()">
+                        <i class="fas fa-arrow-down"></i> Renvoyer au professeur
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function submitRenvoyer() {
+    const message = document.getElementById('message_admin').value;
+    document.getElementById('message_admin_hidden').value = message;
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--color-dark-maroon);
+}
+
+.timeline-content {
+    padding-left: 20px;
+    border-left: 2px solid var(--color-light-taupe);
+    padding-bottom: 10px;
+}
+</style>
+{% endblock %} 

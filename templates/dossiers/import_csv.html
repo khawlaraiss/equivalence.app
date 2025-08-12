@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Importer CSV{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-file-csv"></i> Importer des Dossiers depuis CSV</h1>
+    <div>
+        <a href="{% url 'dossiers:dossiers_traites_admin' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-upload"></i> Sélectionner un fichier CSV</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">Fichier CSV</label>
+                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                        <div class="form-text">
+                            Sélectionnez un fichier CSV contenant les données des dossiers à importer.
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Importer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Format du fichier CSV</h5>
+            </div>
+            <div class="card-body">
+                                 <h6>Colonnes requises :</h6>
+                 <ul class="list-unstyled">
+                     <li><strong>numero</strong> - Numéro du dossier (unique)</li>
+                     <li><strong>demandeur_candidat</strong> - Nom complet du demandeur/candidat</li>
+                     <li><strong>reference</strong> - Référence du dossier</li>
+                     <li><strong>date_envoi</strong> - Date d'envoi (YYYY-MM-DD)</li>
+                     <li><strong>date_reception</strong> - Date de réception (YYYY-MM-DD)</li>
+                     <li><strong>diplome</strong> - Diplôme obtenu</li>
+                     <li><strong>universite</strong> - Université d'origine (choix prédéfinis)</li>
+                     <li><strong>pays</strong> - Pays d'origine (choix prédéfinis)</li>
+                     <li><strong>avis_commission</strong> - Avis de la commission</li>
+                 </ul>
+                 
+                 <h6 class="mt-3">Colonnes optionnelles :</h6>
+                 <ul class="list-unstyled">
+                     <li><strong>reference_reception</strong> - Référence de réception</li>
+                     <li><strong>universite_autre</strong> - Autre université (si pas dans la liste)</li>
+                     <li><strong>pays_autre</strong> - Autre pays (si pas dans la liste)</li>
+                     <li><strong>date_avis</strong> - Date de l'avis (YYYY-MM-DD)</li>
+                     <li><strong>date_decision</strong> - Date de décision (YYYY-MM-DD)</li>
+                 </ul>
+                
+
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

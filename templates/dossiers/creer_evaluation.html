@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer Évaluation - {{ dossier.titre }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-plus-circle"></i> Créer Évaluation d'Équivalence</h1>
+    <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Retour au dossier
+    </a>
+</div>
+
+<form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <!-- Section A: Identification -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-user"></i> A. Identification</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="nom" class="form-label">Nom du candidat *</label>
+                    <input type="text" class="form-control" id="nom" name="nom" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="date_arrivee" class="form-label">Date d'arrivée *</label>
+                    <input type="date" class="form-control" id="date_arrivee" name="date_arrivee" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="pays_origine" class="form-label">Pays d'origine *</label>
+                    <input type="text" class="form-control" id="pays_origine" name="pays_origine" required>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section B: Diplômes -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> B. Diplômes obtenus</h5>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="ajouterDiplome()">
+                <i class="fas fa-plus"></i> Ajouter diplôme
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="diplomes-container">
+                <div class="diplome-item border rounded p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Nom du diplôme</label>
+                            <input type="text" class="form-control" name="diplome_nom" placeholder="Ex: Master of Engineering">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Année</label>
+                            <input type="number" class="form-control" name="diplome_annee" placeholder="2020">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Université</label>
+                            <input type="text" class="form-control" name="diplome_universite" placeholder="Nom de l'université">
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Pays</label>
+                            <input type="text" class="form-control" name="diplome_pays" placeholder="Pays">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Durée</label>
+                            <input type="text" class="form-control" name="diplome_duree" placeholder="Ex: 2 ans">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="supprimerDiplome(this)">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pièces manquantes -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Pièces manquantes</h5>
+            <button type="button" class="btn btn-sm btn-outline-warning" onclick="ajouterPieceManquante()">
+                <i class="fas fa-plus"></i> Ajouter pièce
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="pieces-container">
+                <div class="input-group mb-2">
+                    <input type="text" class="form-control" name="piece_manquante" placeholder="Ex: Relevés de notes traduits">
+                    <button type="button" class="btn btn-outline-danger" onclick="supprimerPiece(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section D: Évaluation des compétences -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> D. Évaluation des compétences</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Compétence</th>
+                            <th>Poids</th>
+                            <th>Note /20</th>
+                            <th>Commentaires</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for competence in competences %}
+                        <tr>
+                            <td>
+                                <strong>{{ competence.nom }}</strong>
+                                {% if competence.description %}
+                                    <br><small class="text-muted">{{ competence.description }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ competence.poids }}</td>
+                            <td>
+                                <input type="number" class="form-control" name="note_{{ competence.id }}" 
+                                       min="0" max="20" required style="width: 80px;">
+                            </td>
+                            <td>
+                                <textarea class="form-control" name="commentaire_{{ competence.id }}" 
+                                          rows="2" placeholder="Commentaires optionnels"></textarea>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons de soumission -->
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Créer l'évaluation
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function ajouterDiplome() {
+    const container = document.getElementById('diplomes-container');
+    const newDiplome = document.createElement('div');
+    newDiplome.className = 'diplome-item border rounded p-3 mb-3';
+    newDiplome.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label">Nom du diplôme</label>
+                <input type="text" class="form-control" name="diplome_nom" placeholder="Ex: Master of Engineering">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Année</label>
+                <input type="number" class="form-control" name="diplome_annee" placeholder="2020">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Université</label>
+                <input type="text" class="form-control" name="diplome_universite" placeholder="Nom de l'université">
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-4">
+                <label class="form-label">Pays</label>
+                <input type="text" class="form-control" name="diplome_pays" placeholder="Pays">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Durée</label>
+                <input type="text" class="form-control" name="diplome_duree" placeholder="Ex: 2 ans">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="supprimerDiplome(this)">
+                    <i class="fas fa-trash"></i> Supprimer
+                </button>
+            </div>
+        </div>
+    `;
+    container.appendChild(newDiplome);
+}
+
+function supprimerDiplome(button) {
+    button.closest('.diplome-item').remove();
+}
+
+function ajouterPieceManquante() {
+    const container = document.getElementById('pieces-container');
+    const newPiece = document.createElement('div');
+    newPiece.className = 'input-group mb-2';
+    newPiece.innerHTML = `
+        <input type="text" class="form-control" name="piece_manquante" placeholder="Ex: Relevés de notes traduits">
+        <button type="button" class="btn btn-outline-danger" onclick="supprimerPiece(this)">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    container.appendChild(newPiece);
+}
+
+function supprimerPiece(button) {
+    button.closest('.input-group').remove();
+}
+
+// Validation du formulaire
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %} 

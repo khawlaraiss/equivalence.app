@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grille d'évaluation des dossiers - {{ candidat.nom }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --color-black: #11100F;
+            --color-dark-maroon: #5D1C34;
+            --color-muted-gold: #A67D44;
+            --color-sage-green: #899481;
+            --color-light-taupe: #CDBCA8;
+            --color-off-white: #EFE9E1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px solid var(--color-dark-maroon);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--color-dark-maroon);
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            color: var(--color-black);
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .candidate-info {
+            background: var(--color-off-white);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--color-dark-maroon);
+        }
+
+        .candidate-info h3 {
+            color: var(--color-dark-maroon);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .info-label {
+            font-weight: bold;
+            min-width: 120px;
+            color: var(--color-black);
+        }
+
+        .info-value {
+            color: var(--color-dark-maroon);
+            font-weight: 500;
+        }
+
+        .etat-section {
+            background: white;
+            border: 1px solid var(--color-light-taupe);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);
+            color: white;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--color-black);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .conditional-fields {
+            margin-left: 25px;
+            padding: 15px;
+            background: var(--color-off-white);
+            border-radius: 6px;
+            border-left: 3px solid var(--color-dark-maroon);
+            display: none;
+        }
+
+        .conditional-fields.show {
+            display: block;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--color-light-taupe);
+            border-radius: 4px;
+            font-size: 13px;
+            background: white;
+            color: var(--color-black);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-dark-maroon);
+        }
+
+        .form-control.date {
+            width: 200px;
+        }
+
+        .form-control.textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .pieces-demandees {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .pieces-demandees h4 {
+            color: var(--color-dark-maroon);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .pieces-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .pieces-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ffeaa7;
+            font-size: 13px;
+        }
+
+        .pieces-list li:last-child {
+            border-bottom: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid var(--color-light-taupe);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(93, 28, 52, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--color-sage-green);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-dark-maroon);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--color-dark-maroon);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--color-black);
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-control.date {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Retour au dossier
+        </a>
+
+        <div class="header">
+            <h1>GRILLE D'ÉVALUATION DES DOSSIERS</h1>
+            <h2>Détermination du type de dossier</h2>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="candidate-info">
+            <h3><i class="fas fa-folder"></i> Informations du Dossier</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Référence :</span>
+                    <span class="info-value">{{ dossier.titre }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date de référence :</span>
+                    <span class="info-value">{{ dossier.date_reception|date:"d/m/Y"|default:"Non spécifiée" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="etat-section">
+                <div class="section-header">
+                    <i class="fas fa-clipboard-list"></i> GRILLE D'ÉVALUATION DES DOSSIERS
+                </div>
+                <div class="section-content">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Information :</strong> Déterminez si ce dossier est nouveau ou s'il a déjà été traité par la commission.
+                    </div>
+
+                                         <div class="form-group">
+                         <div class="checkbox-group">
+                             <input type="checkbox" id="est_nouveau_dossier" name="est_nouveau_dossier" 
+                                    {% if etat.est_nouveau_dossier %}checked{% endif %}>
+                             <label for="est_nouveau_dossier">
+                                 <strong>Oui - Nouveau dossier</strong> → Aller à Consistance académique
+                             </label>
+                         </div>
+                         <div class="checkbox-group">
+                             <input type="checkbox" id="est_dossier_existant" name="est_dossier_existant" 
+                                    {% if not etat.est_nouveau_dossier %}checked{% endif %}>
+                             <label for="est_dossier_existant">
+                                 <strong>Non - Dossier existant</strong> → Aller à Décisions antérieures
+                             </label>
+                         </div>
+                     </div>
+
+                    <!-- Champs conditionnels pour dossier existant -->
+                    <div class="conditional-fields" id="dossier-existant-fields">
+                        <h4><i class="fas fa-history"></i> Décisions antérieures de la commission</h4>
+                        
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="a_decision_anterieure" name="a_decision_anterieure" 
+                                       {% if etat.a_decision_anterieure %}checked{% endif %}>
+                                <label for="a_decision_anterieure">
+                                    <strong>A une décision antérieure</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="decision-details" style="display: none;">
+                            <label for="date_decision_anterieure">Date de la décision antérieure</label>
+                            <input type="date" class="form-control date" name="date_decision_anterieure" 
+                                   id="date_decision_anterieure" 
+                                   value="{% if etat.date_decision_anterieure %}{{ etat.date_decision_anterieure|date:'Y-m-d' }}{% endif %}">
+                        </div>
+
+                        <div class="form-group" id="decision-text" style="display: none;">
+                            <label for="decision_anterieure">Détails de la décision antérieure</label>
+                            <textarea class="form-control textarea" name="decision_anterieure" 
+                                      id="decision_anterieure" 
+                                      placeholder="Décrivez la décision antérieure de la commission...">{{ etat.decision_anterieure }}</textarea>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Dossier incomplet :</strong> Le candidat doit fournir les documents complémentaires suivants :
+                        </div>
+
+                        <div class="pieces-demandees">
+                            <h4><i class="fas fa-list"></i> Pièces complémentaires demandées :</h4>
+                            <ul class="pieces-list">
+                                <li>Les copies certifiées des deux diplômes obtenus</li>
+                                <li>Un justificatif des années d'études pour le Bachelor et le Master</li>
+                                <li>Le programme détaillé des cours du Bachelor et du Master (version originale + traduction en français)</li>
+                                <li>Les relevés de notes du Bachelor et du Master traduits en français</li>
+                                <li>Des attestations ou rapports de stage en topographie, géodésie, photogrammétrie, techniques cadastrales</li>
+                                <li>Un CV du candidat</li>
+                                <li>Une copie de la Carte d'Identité Nationale</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Sauvegarder et continuer
+                </button>
+                {% if user.role == 'professeur' %}
+                <button type="button" class="btn btn-outline-primary" onclick="retourAdmin()">
+                    <i class="fas fa-arrow-up"></i> Retour à l'admin
+                </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const nouveauDossierCheckbox = document.getElementById('est_nouveau_dossier');
+            const dossierExistantCheckbox = document.getElementById('est_dossier_existant');
+            const dossierExistantFields = document.getElementById('dossier-existant-fields');
+            const decisionAnterieureCheckbox = document.getElementById('a_decision_anterieure');
+            const decisionDetails = document.getElementById('decision-details');
+            const decisionText = document.getElementById('decision-text');
+
+            // Fonction pour gérer les checkboxes exclusives
+            function handleCheckboxExclusivity(changedCheckbox) {
+                if (changedCheckbox === nouveauDossierCheckbox) {
+                    if (nouveauDossierCheckbox.checked) {
+                        dossierExistantCheckbox.checked = false;
+                    }
+                } else if (changedCheckbox === dossierExistantCheckbox) {
+                    if (dossierExistantCheckbox.checked) {
+                        nouveauDossierCheckbox.checked = false;
+                    }
+                }
+                toggleConditionalFields();
+            }
+
+            // Fonction pour afficher/masquer les champs conditionnels
+            function toggleConditionalFields() {
+                if (nouveauDossierCheckbox.checked) {
+                    dossierExistantFields.classList.remove('show');
+                } else {
+                    dossierExistantFields.classList.add('show');
+                }
+            }
+
+            function toggleDecisionFields() {
+                if (decisionAnterieureCheckbox.checked) {
+                    decisionDetails.style.display = 'block';
+                    decisionText.style.display = 'block';
+                } else {
+                    decisionDetails.style.display = 'none';
+                    decisionText.style.display = 'none';
+                }
+            }
+
+            // Événements
+            nouveauDossierCheckbox.addEventListener('change', function() {
+                handleCheckboxExclusivity(nouveauDossierCheckbox);
+            });
+            
+            dossierExistantCheckbox.addEventListener('change', function() {
+                handleCheckboxExclusivity(dossierExistantCheckbox);
+            });
+            
+            decisionAnterieureCheckbox.addEventListener('change', toggleDecisionFields);
+
+            // Initialisation
+            toggleConditionalFields();
+            toggleDecisionFields();
+        });
+
+        // Fonction pour retour à l'admin
+        function retourAdmin() {
+            if (confirm('Êtes-vous sûr de vouloir envoyer ce dossier à l\'administrateur ?')) {
+                // Créer un formulaire temporaire pour envoyer les données
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "dossiers:consistance_academique" dossier.id %}';
+                
+                // Ajouter le token CSRF
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrfmiddlewaretoken';
+                csrfToken.value = '{{ csrf_token }}';
+                form.appendChild(csrfToken);
+                
+                // Ajouter le paramètre retour_admin
+                const retourAdmin = document.createElement('input');
+                retourAdmin.type = 'hidden';
+                retourAdmin.name = 'retour_admin';
+                retourAdmin.value = '1';
+                form.appendChild(retourAdmin);
+                
+                // Soumettre le formulaire
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html> 

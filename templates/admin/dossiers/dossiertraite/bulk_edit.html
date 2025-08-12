@@ -1,0 +1,198 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrahead %}{{ block.super }}
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+{{ form.media }}
+{% endblock %}
+
+{% block extrastyle %}{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
+<style>
+    .bulk-edit-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    .dossier-list {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        background: white;
+    }
+    .dossier-item {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+    }
+    .dossier-item:last-child {
+        border-bottom: none;
+    }
+    .dossier-checkbox {
+        margin-right: 10px;
+    }
+    .dossier-info {
+        flex: 1;
+    }
+    .action-form {
+        background: #e3f2fd;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+    .btn-danger {
+        background: #f44336;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-danger:hover {
+        background: #d32f2f;
+    }
+    .btn-warning {
+        background: #ff9800;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-warning:hover {
+        background: #f57c00;
+    }
+    .form-group {
+        margin: 10px 0;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:dossiers_dossiertraite_changelist' %}">Dossiers traités</a>
+    &rsaquo; Modification en masse
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Modification en masse des dossiers traités</h1>
+    
+    <div class="bulk-edit-section">
+        <h2>Sélection des dossiers</h2>
+        <form method="post" id="bulk-edit-form">
+            {% csrf_token %}
+            <div class="dossier-list">
+                {% for dossier in dossiers %}
+                <div class="dossier-item">
+                    <input type="checkbox" name="_selected_action" value="{{ dossier.id }}" class="dossier-checkbox">
+                    <div class="dossier-info">
+                        <strong>{{ dossier.numero }}</strong> - {{ dossier.demandeur }} 
+                        ({{ dossier.universite }}, {{ dossier.pays }})
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="action-form">
+                <h3>Action à effectuer</h3>
+                <div class="form-group">
+                    <label for="action">Action :</label>
+                    <select name="action" id="action" required>
+                        <option value="">Sélectionnez une action</option>
+                        <option value="update_universite">Mettre à jour l'université</option>
+                        <option value="update_pays">Mettre à jour le pays</option>
+                        <option value="update_avis">Mettre à jour l'avis</option>
+                        <option value="delete_selected">Supprimer les dossiers sélectionnés</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="universite-group" style="display: none;">
+                    <label for="nouvelle_universite">Nouvelle université :</label>
+                    <input type="text" name="nouvelle_universite" id="nouvelle_universite">
+                </div>
+                
+                <div class="form-group" id="pays-group" style="display: none;">
+                    <label for="nouveau_pays">Nouveau pays :</label>
+                    <input type="text" name="nouveau_pays" id="nouveau_pays">
+                </div>
+                
+                <div class="form-group" id="avis-group" style="display: none;">
+                    <label for="nouvel_avis">Nouvel avis :</label>
+                    <textarea name="nouvel_avis" id="nouvel_avis" rows="4"></textarea>
+                </div>
+                
+                <button type="submit" class="btn-warning">Appliquer l'action</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="bulk-edit-section">
+        <h2>Actions rapides</h2>
+        <p>
+            <a href="{% url 'admin:dossiers_dossiertraite_changelist' %}" class="btn-warning">
+                Retour à la liste des dossiers
+            </a>
+            <a href="{% url 'admin:dossiers_dossiertraite_import_excel' %}" class="btn-warning">
+                Importer depuis Excel
+            </a>
+            <a href="{% url 'admin:dossiers_dossiertraite_export_excel' %}" class="btn-warning">
+                Exporter vers Excel
+            </a>
+        </p>
+    </div>
+</div>
+
+<script>
+document.getElementById('action').addEventListener('change', function() {
+    const action = this.value;
+    const universiteGroup = document.getElementById('universite-group');
+    const paysGroup = document.getElementById('pays-group');
+    const avisGroup = document.getElementById('avis-group');
+    
+    // Masquer tous les groupes
+    universiteGroup.style.display = 'none';
+    paysGroup.style.display = 'none';
+    avisGroup.style.display = 'none';
+    
+    // Afficher le groupe approprié
+    if (action === 'update_universite') {
+        universiteGroup.style.display = 'block';
+    } else if (action === 'update_pays') {
+        paysGroup.style.display = 'block';
+    } else if (action === 'update_avis') {
+        avisGroup.style.display = 'block';
+    }
+});
+
+// Confirmation pour la suppression
+document.getElementById('bulk-edit-form').addEventListener('submit', function(e) {
+    const action = document.getElementById('action').value;
+    if (action === 'delete_selected') {
+        const selected = document.querySelectorAll('input[name="_selected_action"]:checked');
+        if (selected.length > 0) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selected.length} dossier(s) ?`)) {
+                e.preventDefault();
+            }
+        }
+    }
+});
+</script>
+{% endblock %} 

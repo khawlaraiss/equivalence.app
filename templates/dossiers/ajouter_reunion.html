@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajouter une Réunion{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-calendar-plus"></i> Ajouter une Nouvelle Réunion</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Informations du dossier -->
+                    <div class="mb-4">
+                        <h5><i class="fas fa-folder"></i> Dossier concerné</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Numéro :</strong> {{ dossier.numero }}</p>
+                                <p><strong>Candidat :</strong> {{ dossier.demandeur_candidat }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Diplôme :</strong> {{ dossier.diplome }}</p>
+                                <p><strong>Université :</strong> {{ dossier.universite }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="date_reunion" class="form-label">Date de la réunion *</label>
+                                    <input type="date" name="date_reunion" id="date_reunion" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="participants" class="form-label">Participants *</label>
+                                    <textarea name="participants" id="participants" class="form-control" rows="3" required 
+                                              placeholder="Liste des participants à la réunion..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="ordre_du_jour" class="form-label">Ordre du jour *</label>
+                                    <textarea name="ordre_du_jour" id="ordre_du_jour" class="form-control" rows="4" required 
+                                              placeholder="Points à aborder lors de la réunion..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="decisions" class="form-label">Décisions prises *</label>
+                                    <textarea name="decisions" id="decisions" class="form-control" rows="4" required 
+                                              placeholder="Décisions et conclusions de la réunion..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'dossiers:modifier_dossier_traite' dossier.id %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Ajouter la réunion
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        background-color: var(--color-light-taupe);
+        border-bottom: 1px solid var(--color-muted-gold);
+    }
+    
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+        border: 1px solid #ced4da;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--color-dark-maroon);
+        box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: var(--color-dark-maroon);
+        border-color: var(--color-dark-maroon);
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--color-maroon);
+        border-color: var(--color-maroon);
+    }
+    
+    h5 {
+        color: var(--color-dark-maroon);
+        font-weight: 600;
+    }
+</style>
+{% endblock %} 

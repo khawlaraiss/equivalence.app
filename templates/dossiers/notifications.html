@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-bell"></i> Notifications</h1>
+    <div>
+        {% if non_lues > 0 %}
+        <a href="{% url 'dossiers:marquer_toutes_lues' %}" class="btn btn-outline-success me-2">
+            <i class="fas fa-check-double"></i> Marquer toutes comme lues
+        </a>
+        {% endif %}
+        <a href="{% url 'dossiers:dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-bell fa-2x mb-2"></i>
+                <h3>{{ notifications.count }}</h3>
+                <p class="card-text">Total notifications</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-sage-green) 0%, var(--color-dark-maroon) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-envelope fa-2x mb-2"></i>
+                <h3>{{ non_lues }}</h3>
+                <p class="card-text">Non lues</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-muted-gold) 0%, var(--color-sage-green) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-check fa-2x mb-2"></i>
+                <h3>{{ notifications.count|add:"-"|add:non_lues }}</h3>
+                <p class="card-text">Lues</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des notifications -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-list"></i> Toutes les notifications</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if notifications %}
+        <div class="list-group list-group-flush">
+            {% for notification in notifications %}
+            <div class="list-group-item {% if not notification.lu %}list-group-item-warning{% endif %} notification-item" data-id="{{ notification.id }}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <h6 class="mb-0 me-2">
+                                {% if notification.type_notification == 'affectation' %}
+                                    <i class="fas fa-user-plus text-primary"></i>
+                                {% elif notification.type_notification == 'traitement' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% elif notification.type_notification == 'evaluation' %}
+                                    <i class="fas fa-chart-bar text-info"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle text-secondary"></i>
+                                {% endif %}
+                                {{ notification.titre }}
+                            </h6>
+                            {% if not notification.lu %}
+                                <span class="badge bg-warning">Nouveau</span>
+                            {% endif %}
+                        </div>
+                        <p class="mb-1">{{ notification.message }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> {{ notification.date_creation|date:"d/m/Y H:i" }}
+                            {% if notification.dossier %}
+                                • <i class="fas fa-folder"></i> {{ notification.dossier.titre }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="ms-3">
+                        {% if not notification.lu %}
+                        <button class="btn btn-sm btn-outline-success marquer-lu" data-id="{{ notification.id }}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        {% endif %}
+                        {% if notification.dossier %}
+                        <a href="{% url 'dossiers:dossier_detail' notification.dossier.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-danger supprimer-notification" data-id="{{ notification.id }}" title="Supprimer cette notification">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+            <h5>Aucune notification</h5>
+            <p class="text-muted">Vous n'avez pas encore reçu de notifications</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Marquer une notification comme lue
+    document.querySelectorAll('.marquer-lu').forEach(button => {
+        button.addEventListener('click', function() {
+            const notificationId = this.dataset.id;
+            const notificationItem = this.closest('.notification-item');
+            
+            fetch('{% url "dossiers:notifications" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: `notification_id=${notificationId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    notificationItem.classList.remove('list-group-item-warning');
+                    this.remove();
+                    const badge = notificationItem.querySelector('.badge');
+                    if (badge) badge.remove();
+                    
+                    // Mettre à jour le compteur
+                    const nonLuesElement = document.querySelector('.card:nth-child(2) h3');
+                    if (nonLuesElement) {
+                        const currentCount = parseInt(nonLuesElement.textContent);
+                        nonLuesElement.textContent = currentCount - 1;
+                    }
+                }
+            });
+        });
+    });
+
+    // Supprimer une notification
+    document.querySelectorAll('.supprimer-notification').forEach(button => {
+        button.addEventListener('click', function() {
+            const notificationId = this.dataset.id;
+            const notificationItem = this.closest('.notification-item');
+            
+            if (confirm('⚠️ Êtes-vous sûr de vouloir supprimer cette notification ?\n\nCette action est irréversible.')) {
+                // Créer un formulaire pour la suppression
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{% url 'dossiers:supprimer_notification' 0 %}".replace('0', notificationId);
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrfmiddlewaretoken';
+                csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                form.appendChild(csrfToken);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+});
+</script>
+
+{% csrf_token %}
+{% endblock %} 

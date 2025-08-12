@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord Administrateur{% endblock %}
+
+{% block content %}
+<!-- Token CSRF caché pour les requêtes AJAX -->
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+<div class="page-header">
+    <h1><i class="fas fa-tachometer-alt"></i> Tableau de bord Administrateur</h1>
+    <p class="mb-0">Vue d'ensemble et gestion des dossiers d'équivalence</p>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <form method="get" class="d-flex">
+                    <select name="statut" class="form-select me-2">
+                        <option value="">Tous les statuts</option>
+                        {% for statut_code, statut_nom in statuts %}
+                            <option value="{{ statut_code }}" {% if request.GET.statut == statut_code %}selected{% endif %}>
+                                {{ statut_nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="{% url 'dossiers:gestion_dossiers' %}" class="btn btn-success me-2">
+                    <i class="fas fa-plus"></i> Nouveau dossier
+                </a>
+                <a href="{% url 'users:create_user' %}" class="btn btn-primary me-2">
+                    <i class="fas fa-user-plus"></i> Nouvel utilisateur
+                </a>
+                <a href="{% url 'users:gestion_utilisateurs' %}" class="btn btn-info me-2">
+                    <i class="fas fa-users"></i> Gestion utilisateurs
+                </a>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-folder fa-2x mb-2"></i>
+                <h3 class="card-title">{{ total_dossiers }}</h3>
+                <p class="card-text">Total dossiers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-muted-gold) 0%, var(--color-dark-maroon) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <h3 class="card-title">{{ non_traites }}</h3>
+                <p class="card-text">Non traités</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-light-taupe) 0%, var(--color-sage-green) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-spinner fa-2x mb-2"></i>
+                <h3 class="card-title">{{ en_cours }}</h3>
+                <p class="card-text">En cours</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-sage-green) 0%, var(--color-muted-gold) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <h3 class="card-title">{{ traites }}</h3>
+                <p class="card-text">Traités</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Liste des dossiers -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-list"></i> Liste des Dossiers</h5>
+    </div>
+    <div class="card-body">
+        {% if dossiers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Référence</th>
+                            <th>Date réception</th>
+                            <th>Statut</th>
+                            <th>Professeurs assignés</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dossier in dossiers %}
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ dossier.id }}</span></td>
+                            <td>
+                                <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="text-decoration-none fw-bold">
+                                    {{ dossier.titre }}
+                                </a>
+                            </td>
+                            <td>{{ dossier.date_reception|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge bg-{% if dossier.statut == 'non_traite' %}warning{% elif dossier.statut == 'en_cours' %}info{% elif dossier.statut == 'traite' %}success{% else %}secondary{% endif %}">
+                                    {{ dossier.get_statut_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% for professeur in dossier.professeurs.all %}
+                                    <span class="badge bg-light text-dark me-1">{{ professeur.username }}</span>
+                                {% empty %}
+                                    <span class="text-muted">Aucun professeur assigné</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-sm btn-outline-primary" title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'dossiers:affecter_dossier' dossier.id %}" class="btn btn-sm btn-outline-success" title="Affecter">
+                                        <i class="fas fa-user-plus"></i>
+                                    </a>
+                                    <a href="{% url 'dossiers:modifier_dossier' dossier.id %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'dossiers:supprimer_dossier' dossier.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Aucun dossier trouvé</h4>
+                <p class="text-muted">Commencez par créer votre premier dossier d'équivalence</p>
+                <a href="{% url 'dossiers:gestion_dossiers' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Créer un dossier
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+ 

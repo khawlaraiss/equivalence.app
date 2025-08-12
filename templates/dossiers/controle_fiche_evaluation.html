@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle de la Fiche d'Évaluation - Administrateur</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --color-black: #11100F;
+            --color-dark-maroon: #5D1C34;
+            --color-muted-gold: #A67D44;
+            --color-sage-green: #899481;
+            --color-light-taupe: #CDBCA8;
+            --color-off-white: #EFE9E1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px solid var(--color-dark-maroon);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--color-dark-maroon);
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            color: var(--color-black);
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .admin-info {
+            background: var(--color-off-white);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--color-dark-maroon);
+        }
+
+        .admin-info h3 {
+            color: var(--color-dark-maroon);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .consistance-section {
+            background: white;
+            border: 1px solid var(--color-light-taupe);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);
+            color: white;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .consistance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .consistance-table th {
+            background: var(--color-dark-maroon);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid var(--color-dark-maroon);
+            vertical-align: middle;
+        }
+
+        .consistance-table td {
+            padding: 12px 8px;
+            border: 1px solid var(--color-light-taupe);
+            vertical-align: top;
+        }
+
+        .consistance-table .critere-cell {
+            background: var(--color-off-white);
+            font-weight: bold;
+            color: var(--color-dark-maroon);
+            width: 15%;
+            text-align: center;
+        }
+
+        .consistance-table .competences-cell {
+            background: #f8f9fa;
+            width: 25%;
+            font-size: 12px;
+        }
+
+        .consistance-table .contenus-cell {
+            width: 25%;
+        }
+
+        .consistance-table .commentaires-cell {
+            width: 20%;
+        }
+
+        .consistance-table .notes-cell {
+            width: 15%;
+            text-align: center;
+        }
+
+        .competences-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .competences-list .main-item {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .competences-list .sub-item {
+            margin: 4px 0;
+            padding: 2px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .competences-list .sub-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #3498db;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--color-light-taupe);
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+            color: var(--color-black);
+            resize: vertical;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-dark-maroon);
+        }
+
+        .form-control.textarea {
+            height: 80px;
+        }
+
+        .form-control.note {
+            width: 60px;
+            text-align: center;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid var(--color-light-taupe);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(93, 28, 52, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--color-sage-green);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-dark-maroon);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--color-dark-maroon);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--color-black);
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        /* Section d'ajout de critères */
+        .ajouter-critere-section {
+            background: var(--color-off-white);
+            border: 2px dashed var(--color-sage-green);
+        }
+        
+        .ajouter-critere-form {
+            padding: 20px;
+        }
+        
+        .ajouter-critere-form h5 {
+            color: var(--color-dark-maroon);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .form-group {
+            flex: 1;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--color-black);
+            font-size: 12px;
+        }
+        
+        .btn-ajouter-critere {
+            background: var(--color-sage-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-ajouter-critere:hover {
+            background: var(--color-dark-maroon);
+            transform: translateY(-2px);
+        }
+
+        /* Styles pour la section Stages */
+        .stages-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--color-off-white);
+            border-radius: 6px;
+            border-left: 3px solid var(--color-dark-maroon);
+        }
+
+        .stages-list {
+            margin-bottom: 15px;
+        }
+
+        .stage-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            padding: 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid var(--color-light-taupe);
+        }
+
+        .stage-item input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.1);
+        }
+
+        .stage-item label {
+            margin: 0;
+            font-weight: 500;
+            color: var(--color-black);
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .stage-item:hover {
+            background: var(--color-light-taupe);
+        }
+
+        @media (max-width: 1200px) {
+            .consistance-table {
+                font-size: 11px;
+            }
+            
+            .consistance-table th,
+            .consistance-table td {
+                padding: 8px 4px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .consistance-table {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'dossiers:dashboard' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+        </a>
+
+        <div class="header">
+            <h1>CONTRÔLE DE LA FICHE D'ÉVALUATION</h1>
+            <h2>Structure globale pour l'évaluation des compétences</h2>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="admin-info">
+            <h3><i class="fas fa-user-shield"></i> Informations Administrateur</h3>
+            <p><strong>Fonction :</strong> Contrôle de la structure globale de la fiche d'évaluation</p>
+            <p><strong>Dernière modification :</strong> {{ structure.date_modification|date:"d/m/Y H:i" }}</p>
+            <p><strong>Note :</strong> Les modifications s'appliquent à tous les dossiers. Les professeurs utiliseront cette structure pour évaluer les candidats.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="consistance-section">
+                <div class="section-header">
+                    <i class="fas fa-table"></i> TABLEAU DE CONTRÔLE DE LA STRUCTURE D'ÉVALUATION
+                </div>
+                <div class="section-content">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Information :</strong> Contrôlez la structure de la fiche d'évaluation. Modifiez les notes maximales et gérez les critères personnalisés.
+                    </div>
+
+                    <table class="consistance-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">N°</th>
+                                <th>Critères</th>
+                                <th>Compétences sommaires de Référence</th>
+                                <th>Contenus suivis par les candidats</th>
+                                <th>Commentaires</th>
+                                <th>Poids/Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Sciences géodésiques obligatoires -->
+                            {% if 'sciences_geodesiques' not in structure.criteres_fixes_supprimes|default:"[]" %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">1</td>
+                                <td class="critere-cell">
+                                                                         <div>
+                                         Sciences géodésiques obligatoires<br>
+                                         <div style="margin-top: 5px;">
+                                             <button type="submit" name="supprimer_critere_fixe" value="sciences_geodesiques" 
+                                                     onclick="return confirm('Êtes-vous sûr de vouloir supprimer le critère Sciences géodésiques ?')"
+                                                     style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer;">
+                                                 <i class="fas fa-trash"></i> Supprimer
+                                             </button>
+                                         </div>
+                                         <div style="margin-top: 5px;">
+                                             <strong>(<input type="number" class="form-control note" name="sciences_geodesiques_note_max" 
+                                                            value="{{ structure.sciences_geodesiques_note_max }}" min="1" max="20" style="width: 50px;"> points)</strong>
+                                         </div>
+                                     </div>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise des principes fondamentaux :</li>
+                                        {% for comp in structure.competences_criteres_fixes.sciences_geodesiques|default:compétences_sciences_geodesiques %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" checked disabled>
+                                            {{ comp }}
+                                            <button type="submit" name="supprimer_comp_fixe_sciences_geodesiques_{{ forloop.counter0 }}" 
+                                                    style="background: #dc3545; color: white; border: none; padding: 1px 4px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 5px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="nouvelle_comp_fixe_sciences_geodesiques" class="form-control" 
+                                               placeholder="Ajouter une compétence..." style="font-size: 11px;">
+                                        <button type="submit" name="ajouter_comp_fixe_sciences_geodesiques" 
+                                                style="background: var(--color-sage-green); color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; margin-top: 3px;">
+                                            <i class="fas fa-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" readonly 
+                                           placeholder="0-{{ structure.sciences_geodesiques_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Topographie obligatoire -->
+                            {% if 'topographie' not in structure.criteres_fixes_supprimes|default:"[]" %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">2</td>
+                                <td class="critere-cell">
+                                                                         <div>
+                                         Topographie obligatoire<br>
+                                         <div style="margin-top: 5px;">
+                                             <button type="submit" name="supprimer_critere_fixe" value="topographie" 
+                                                     onclick="return confirm('Êtes-vous sûr de vouloir supprimer le critère Topographie ?')"
+                                                     style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer;">
+                                                 <i class="fas fa-trash"></i> Supprimer
+                                             </button>
+                                         </div>
+                                         <div style="margin-top: 5px;">
+                                             <strong>(<input type="number" class="form-control note" name="topographie_note_max" 
+                                                            value="{{ structure.topographie_note_max }}" min="1" max="20" style="width: 50px;"> points)</strong>
+                                         </div>
+                                     </div>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.topographie|default:compétences_topographie %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" checked disabled>
+                                            {{ comp }}
+                                            <button type="submit" name="supprimer_comp_fixe_topographie_{{ forloop.counter0 }}" 
+                                                    style="background: #dc3545; color: white; border: none; padding: 1px 4px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 5px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="nouvelle_comp_fixe_topographie" class="form-control" 
+                                               placeholder="Ajouter une compétence..." style="font-size: 11px;">
+                                        <button type="submit" name="ajouter_comp_fixe_topographie" 
+                                                style="background: var(--color-sage-green); color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; margin-top: 3px;">
+                                            <i class="fas fa-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" readonly 
+                                           placeholder="0-{{ structure.topographie_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Photogrammétrie obligatoire -->
+                            {% if 'photogrammetrie' not in structure.criteres_fixes_supprimes|default:"[]" %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">3</td>
+                                <td class="critere-cell">
+                                                                         <div>
+                                         Photogrammétrie obligatoire<br>
+                                         <div style="margin-top: 5px;">
+                                             <button type="submit" name="supprimer_critere_fixe" value="photogrammetrie" 
+                                                     onclick="return confirm('Êtes-vous sûr de vouloir supprimer le critère Photogrammétrie ?')"
+                                                     style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer;">
+                                                 <i class="fas fa-trash"></i> Supprimer
+                                             </button>
+                                         </div>
+                                         <div style="margin-top: 5px;">
+                                             <strong>(<input type="number" class="form-control note" name="photogrammetrie_note_max" 
+                                                            value="{{ structure.photogrammetrie_note_max }}" min="1" max="20" style="width: 50px;"> points)</strong>
+                                         </div>
+                                     </div>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.photogrammetrie|default:compétences_photogrammetrie %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" checked disabled>
+                                            {{ comp }}
+                                            <button type="submit" name="supprimer_comp_fixe_photogrammetrie_{{ forloop.counter0 }}" 
+                                                    style="background: #dc3545; color: white; border: none; padding: 1px 4px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 5px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="nouvelle_comp_fixe_photogrammetrie" class="form-control" 
+                                               placeholder="Ajouter une compétence..." style="font-size: 11px;">
+                                        <button type="submit" name="ajouter_comp_fixe_photogrammetrie" 
+                                                style="background: var(--color-sage-green); color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; margin-top: 3px;">
+                                            <i class="fas fa-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" readonly 
+                                           placeholder="0-{{ structure.photogrammetrie_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Cartographie obligatoire -->
+                            {% if 'cartographie' not in structure.criteres_fixes_supprimes|default:"[]" %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">4</td>
+                                <td class="critere-cell">
+                                                                         <div>
+                                         Cartographie obligatoire<br>
+                                         <div style="margin-top: 5px;">
+                                             <button type="submit" name="supprimer_critere_fixe" value="cartographie" 
+                                                     onclick="return confirm('Êtes-vous sûr de vouloir supprimer le critère Cartographie ?')"
+                                                     style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer;">
+                                                 <i class="fas fa-trash"></i> Supprimer
+                                             </button>
+                                         </div>
+                                         <div style="margin-top: 5px;">
+                                             <strong>(<input type="number" class="form-control note" name="cartographie_note_max" 
+                                                            value="{{ structure.cartographie_note_max }}" min="1" max="20" style="width: 50px;"> points)</strong>
+                                         </div>
+                                     </div>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.cartographie|default:compétences_cartographie %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" checked disabled>
+                                            {{ comp }}
+                                            <button type="submit" name="supprimer_comp_fixe_cartographie_{{ forloop.counter0 }}" 
+                                                    style="background: #dc3545; color: white; border: none; padding: 1px 4px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 5px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="nouvelle_comp_fixe_cartographie" class="form-control" 
+                                               placeholder="Ajouter une compétence..." style="font-size: 11px;">
+                                        <button type="submit" name="ajouter_comp_fixe_cartographie" 
+                                                style="background: var(--color-sage-green); color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; margin-top: 3px;">
+                                            <i class="fas fa-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" readonly 
+                                           placeholder="0-{{ structure.cartographie_note_max }}">
+                                </td>
+                            </tr>
+
+                            <!-- Critères personnalisés -->
+                            {% if structure.criteres_personnalises_globaux %}
+                            {% for critere in structure.criteres_personnalises_globaux %}
+                            <tr style="background: #f8f9fa;">
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">{{ forloop.counter0|add:5 }}</td>
+                                                                 <td class="critere-cell">
+                                     <div>
+                                         {{ critere.nom }}<br>
+                                         <div style="margin-top: 5px;">
+                                             <button type="submit" name="action_critere" value="supprimer" 
+                                                     onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce critère ?')"
+                                                     style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer;">
+                                                 <i class="fas fa-trash"></i> Supprimer
+                                             </button>
+                                             <input type="hidden" name="critere_id" value="{{ critere.id }}">
+                                         </div>
+                                                                                   <div style="margin-top: 5px;">
+                                              <strong>(<input type="number" class="form-control note" name="critere_personnalise_note_max_{{ critere.id }}" 
+                                                             value="{{ critere.note_max }}" min="1" max="20" style="width: 50px;"> points)</strong>
+                                          </div>
+                                     </div>
+                                 </td>
+                                <td class="competences-cell">
+                                    <div style="color: var(--color-muted-gold); font-style: italic; font-size: 11px; margin-bottom: 8px;">
+                                        <i class="fas fa-plus-circle"></i> Critère personnalisé
+                                    </div>
+                                    <ul class="competences-list">
+                                        {% for comp in critere.compétences %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" checked disabled>
+                                            {{ comp }}
+                                            <button type="submit" name="supprimer_competence_{{ critere.id }}_{{ forloop.counter0 }}" 
+                                                    style="background: #dc3545; color: white; border: none; padding: 1px 4px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 5px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="nouvelle_competence_{{ critere.id }}" class="form-control" 
+                                               placeholder="Ajouter une compétence..." style="font-size: 11px;">
+                                        <button type="submit" name="ajouter_competence_{{ critere.id }}" 
+                                                style="background: var(--color-sage-green); color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; margin-top: 3px;">
+                                            <i class="fas fa-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" readonly 
+                                           placeholder="0-{{ critere.note_max }}">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+
+                            {% endif %}
+
+                            <!-- Droit foncier, cadastre et aménagements fonciers -->
+                            {% if 'droit_foncier' not in structure.criteres_fixes_supprimes|default:"[]" %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">{{ structure.criteres_personnalises_globaux|length|add:5 }}</td>
+                                <td class="critere-cell">
+                                                                         <div>
+                                         Droit foncier, cadastre et aménagements fonciers obligatoires<br>
+                                         <div style="margin-top: 5px;">
+                                             <button type="submit" name="supprimer_critere_fixe" value="droit_foncier" 
+                                                     onclick="return confirm('Êtes-vous sûr de vouloir supprimer le critère Droit foncier ?')"
+                                                     style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer;">
+                                                 <i class="fas fa-trash"></i> Supprimer
+                                             </button>
+                                         </div>
+                                         <div style="margin-top: 5px;">
+                                             <strong>(<input type="number" class="form-control note" name="droit_foncier_note_max" 
+                                                            value="{{ structure.droit_foncier_note_max }}" min="1" max="20" style="width: 50px;"> points)</strong>
+                                         </div>
+                                     </div>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.droit_foncier|default:compétences_droit_foncier %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" checked disabled>
+                                            {{ comp }}
+                                            <button type="submit" name="supprimer_comp_fixe_droit_foncier_{{ forloop.counter0 }}" 
+                                                    style="background: #dc3545; color: white; border: none; padding: 1px 4px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 5px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="nouvelle_comp_fixe_droit_foncier" class="form-control" 
+                                               placeholder="Ajouter une compétence..." style="font-size: 11px;">
+                                        <button type="submit" name="ajouter_comp_fixe_droit_foncier" 
+                                                style="background: var(--color-sage-green); color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; margin-top: 3px;">
+                                            <i class="fas fa-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" readonly 
+                                           placeholder="0-{{ structure.droit_foncier_note_max }}">
+                                </td>
+                            </tr>
+
+                            {% endif %}
+
+                            <!-- SIG -->
+                            {% if 'sig' not in structure.criteres_fixes_supprimes|default:"[]" %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">{{ structure.criteres_personnalises_globaux|length|add:6 }}</td>
+                                <td class="critere-cell">
+                                                                         <div>
+                                         Systèmes d'Information Géographique (SIG)<br>
+                                         <div style="margin-top: 5px;">
+                                             <button type="submit" name="supprimer_critere_fixe" value="sig" 
+                                                     onclick="return confirm('Êtes-vous sûr de vouloir supprimer le critère SIG ?')"
+                                                     style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer;">
+                                                 <i class="fas fa-trash"></i> Supprimer
+                                             </button>
+                                         </div>
+                                         <div style="margin-top: 5px;">
+                                             <strong>(<input type="number" class="form-control note" name="sig_note_max" 
+                                                            value="{{ structure.sig_note_max }}" min="1" max="20" style="width: 50px;"> points)</strong>
+                                         </div>
+                                     </div>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.sig|default:compétences_sig %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" checked disabled>
+                                            {{ comp }}
+                                            <button type="submit" name="supprimer_comp_fixe_sig_{{ forloop.counter0 }}" 
+                                                    style="background: #dc3545; color: white; border: none; padding: 1px 4px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 5px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="nouvelle_comp_fixe_sig" class="form-control" 
+                                               placeholder="Ajouter une compétence..." style="font-size: 11px;">
+                                        <button type="submit" name="ajouter_comp_fixe_sig" 
+                                                style="background: var(--color-sage-green); color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; margin-top: 3px;">
+                                            <i class="fas fa-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" readonly 
+                                           placeholder="0-{{ structure.sig_note_max }}">
+                                </td>
+                            </tr>
+
+                            {% endif %}
+
+                            <!-- Télédétection -->
+                            {% if 'teledetection' not in structure.criteres_fixes_supprimes|default:"[]" %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">{{ structure.criteres_personnalises_globaux|length|add:7 }}</td>
+                                <td class="critere-cell">
+                                                                         <div>
+                                         Télédétection<br>
+                                         <div style="margin-top: 5px;">
+                                             <button type="submit" name="supprimer_critere_fixe" value="teledetection" 
+                                                     onclick="return confirm('Êtes-vous sûr de vouloir supprimer le critère Télédétection ?')"
+                                                     style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer;">
+                                                 <i class="fas fa-trash"></i> Supprimer
+                                             </button>
+                                         </div>
+                                         <div style="margin-top: 5px;">
+                                             <strong>(<input type="number" class="form-control note" name="teledetection_note_max" 
+                                                            value="{{ structure.teledetection_note_max }}" min="1" max="20" style="width: 50px;"> points)</strong>
+                                         </div>
+                                     </div>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.teledetection|default:compétences_teledetection %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" checked disabled>
+                                            {{ comp }}
+                                            <button type="submit" name="supprimer_comp_fixe_teledetection_{{ forloop.counter0 }}" 
+                                                    style="background: #dc3545; color: white; border: none; padding: 1px 4px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 5px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <div style="margin-top: 8px;">
+                                        <input type="text" name="nouvelle_comp_fixe_teledetection" class="form-control" 
+                                               placeholder="Ajouter une compétence..." style="font-size: 11px;">
+                                        <button type="submit" name="ajouter_comp_fixe_teledetection" 
+                                                style="background: var(--color-sage-green); color: white; border: none; padding: 3px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; margin-top: 3px;">
+                                            <i class="fas fa-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" readonly 
+                                              placeholder="Zone de saisie pour les professeurs..."></textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" readonly 
+                                           placeholder="0-{{ structure.teledetection_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Section pour ajouter un nouveau critère personnalisé -->
+                            <tr class="ajouter-critere-section">
+                                <td colspan="6">
+                                    <div class="ajouter-critere-form">
+                                        <h5><i class="fas fa-plus-circle"></i> Ajouter un nouveau critère personnalisé</h5>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="nom_critere_personnalise">Nom du critère :</label>
+                                                <input type="text" class="form-control" id="nom_critere_personnalise" 
+                                                       name="nom_critere_personnalise" placeholder="Ex: Informatique appliquée">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="note_max_critere_personnalise">Note maximale :</label>
+                                                <input type="number" class="form-control" id="note_max_critere_personnalise" 
+                                                       name="note_max_critere_personnalise" min="1" max="20" value="10">
+                                            </div>
+                                            <div class="form-group">
+                                                <button type="submit" name="action_critere" value="ajouter" class="btn-ajouter-critere">
+                                                    <i class="fas fa-plus"></i> Ajouter le critère
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Section Stages et professionnalisation séparée -->
+                    <div class="stages-section">
+                        <h5 style="color: var(--color-dark-maroon); margin-bottom: 15px; font-size: 16px;">
+                            <i class="fas fa-briefcase"></i> Stages et professionnalisation avec rapports et attestations
+                        </h5>
+                        
+                        <div style="display: flex; gap: 20px;">
+                            <div style="flex: 2;">
+                                <h6 style="color: var(--color-black); margin-bottom: 10px; font-size: 14px;">Stages obligatoires :</h6>
+                                <div class="stages-list">
+                                    <!-- Stages par défaut -->
+                                    {% if 'stage_conservation_fonciere' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" checked disabled>
+                                        <label>Stage conservation foncière ANCFCC (1 semaine)</label>
+                                        <button type="submit" name="supprimer_stage_defaut_stage_conservation_fonciere" 
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce stage ?')"
+                                                style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 8px;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if 'stage_cadastre' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" checked disabled>
+                                        <label>Stage cadastre ANCFCC (2 semaines)</label>
+                                        <button type="submit" name="supprimer_stage_defaut_stage_cadastre" 
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce stage ?')"
+                                                style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 8px;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if 'stage_geodesie' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" checked disabled>
+                                        <label>Stage de Géodésie (2 semaines)</label>
+                                        <button type="submit" name="supprimer_stage_defaut_stage_geodesie" 
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce stage ?')"
+                                                style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 8px;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if 'stage_topographie' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" checked disabled>
+                                        <label>Stage de Topographie (2 semaines)</label>
+                                        <button type="submit" name="supprimer_stage_defaut_stage_topographie" 
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce stage ?')"
+                                                style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 8px;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if 'stage_photogrammetrie' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" checked disabled>
+                                        <label>Stage de Photogrammétrie (2 semaines)</label>
+                                        <button type="submit" name="supprimer_stage_defaut_stage_photogrammetrie" 
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce stage ?')"
+                                                style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 8px;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Stages configurables ajoutés par l'admin -->
+                                    {% if structure.stages_configurables %}
+                                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--color-light-taupe);">
+                                        <h6 style="color: var(--color-muted-gold); margin-bottom: 8px; font-size: 13px;">
+                                            <i class="fas fa-plus-circle"></i> Stages personnalisés ajoutés :
+                                        </h6>
+                                        {% for stage in structure.stages_configurables %}
+                                        <div class="stage-item" style="background: #f8f9fa; border-left: 3px solid var(--color-muted-gold);">
+                                            <input type="checkbox" checked disabled>
+                                            <label>{{ stage.nom }} ({{ stage.duree }})</label>
+                                            <button type="submit" name="action_stage" value="supprimer" 
+                                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce stage ?')"
+                                                    style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 8px;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <input type="hidden" name="stage_id" value="{{ stage.id }}">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Section pour ajouter un nouveau stage personnalisé -->
+                                <div style="margin-top: 15px; padding: 10px; background: var(--color-off-white); border-radius: 4px; border: 2px dashed var(--color-sage-green);">
+                                    <h6 style="color: var(--color-dark-maroon); margin-bottom: 8px; font-size: 13px;">
+                                        <i class="fas fa-plus-circle"></i> Ajouter un nouveau stage personnalisé
+                                    </h6>
+                                    <div style="display: flex; gap: 8px; align-items: end;">
+                                        <div style="flex: 1;">
+                                            <input type="text" class="form-control" name="nom_stage_personnalise" 
+                                                   placeholder="Nom du stage..." style="font-size: 11px;">
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <input type="text" class="form-control" name="duree_stage_personnalise" 
+                                                   placeholder="Durée (ex: 2 semaines)..." style="font-size: 11px;">
+                                        </div>
+                                        <div>
+                                            <button type="submit" name="action_stage" value="ajouter" 
+                                                    style="background: var(--color-sage-green); color: white; border: none; padding: 6px 12px; border-radius: 3px; font-size: 11px; cursor: pointer;">
+                                                <i class="fas fa-plus"></i> Ajouter
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="flex: 1;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label style="font-weight: bold; color: var(--color-black); font-size: 12px;">Note maximale Stages :</label>
+                                    <input type="number" class="form-control" name="stages_note_max" 
+                                           value="{{ structure.stages_note_max }}" min="1" max="20" style="width: 100px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning" style="margin-top: 15px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note :</strong> Les zones de saisie sont en lecture seule car elles sont destinées aux professeurs. 
+                        Vous contrôlez uniquement la structure et les notes maximales.
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="{% url 'dossiers:dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Sauvegarder la structure
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html> 

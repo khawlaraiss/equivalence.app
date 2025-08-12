@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Dossiers{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-folder-open"></i> Mes Dossiers</h1>
+    <p class="mb-0">Dossiers d'équivalence qui vous ont été attribués</p>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="d-flex">
+            <select name="statut" class="form-select me-2">
+                <option value="">Tous les statuts</option>
+                {% for statut_code, statut_nom in statuts %}
+                    <option value="{{ statut_code }}" {% if request.GET.statut == statut_code %}selected{% endif %}>
+                        {{ statut_nom }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Filtrer
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-folder fa-2x mb-2"></i>
+                <h3 class="card-title">{{ total_attribues }}</h3>
+                <p class="card-text">Dossiers attribués</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-muted-gold) 0%, var(--color-dark-maroon) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <h3 class="card-title">{{ a_traiter }}</h3>
+                <p class="card-text">À traiter</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-light-taupe) 0%, var(--color-sage-green) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-spinner fa-2x mb-2"></i>
+                <h3 class="card-title">{{ en_cours }}</h3>
+                <p class="card-text">En cours</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-sage-green) 0%, var(--color-muted-gold) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <h3 class="card-title">{{ termines }}</h3>
+                <p class="card-text">Terminés</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications récentes -->
+{% if notifications_recentes %}
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5><i class="fas fa-bell"></i> Notifications récentes</h5>
+    </div>
+    <div class="card-body">
+        <div class="list-group list-group-flush">
+            {% for notification in notifications_recentes %}
+            <div class="list-group-item list-group-item-warning">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">
+                            {% if notification.type_notification == 'affectation' %}
+                                <i class="fas fa-user-plus text-primary"></i>
+                            {% elif notification.type_notification == 'traitement' %}
+                                <i class="fas fa-check-circle text-success"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle text-secondary"></i>
+                            {% endif %}
+                            {{ notification.titre }}
+                        </h6>
+                        <p class="mb-1">{{ notification.message }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> {{ notification.date_creation|date:"d/m/Y H:i" }}
+                            {% if notification.dossier %}
+                                • <i class="fas fa-folder"></i> {{ notification.dossier.titre }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="ms-3">
+                        {% if notification.dossier %}
+                        <a href="{% url 'dossiers:dossier_detail' notification.dossier.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> Voir
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-3">
+            <a href="{% url 'dossiers:notifications' %}" class="btn btn-warning">
+                <i class="fas fa-bell"></i> Voir toutes les notifications
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Liste des dossiers -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-list"></i> Dossiers Attribués</h5>
+    </div>
+    <div class="card-body">
+        {% if dossiers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Référence</th>
+                            <th>Date réception</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dossier in dossiers %}
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ dossier.id }}</span></td>
+                            <td>
+                                <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="text-decoration-none fw-bold">
+                                    {{ dossier.titre }}
+                                </a>
+                            </td>
+                            <td>{{ dossier.date_reception|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge bg-{% if dossier.statut == 'non_traite' %}warning{% elif dossier.statut == 'en_cours' %}info{% elif dossier.statut == 'traite' %}success{% else %}secondary{% endif %}">
+                                    {{ dossier.get_statut_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-sm btn-outline-primary" title="Voir">
+                                        <i class="fas fa-eye"></i> Voir
+                                    </a>
+                                    <a href="{% url 'dossiers:traiter_dossier' dossier.id %}" class="btn btn-sm btn-outline-warning" title="Traiter">
+                                        <i class="fas fa-edit"></i> Traiter
+                                    </a>
+                                    <a href="{% url 'dossiers:ajouter_rapport' dossier.id %}" class="btn btn-sm btn-outline-success" title="Rapport">
+                                        <i class="fas fa-file-alt"></i> Rapport
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Aucun dossier attribué</h4>
+                <p class="text-muted">Les dossiers vous seront attribués par l'administrateur</p>
+                <div class="mt-3">
+                    <i class="fas fa-info-circle text-primary"></i>
+                    <small class="text-muted">Vous recevrez une notification quand un dossier vous sera assigné</small>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajouter un rapport - {{ dossier.titre }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-file-alt"></i> Ajouter un rapport d'analyse</h1>
+    <div>
+        <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Retour au dossier
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Nouveau rapport d'analyse</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="titre" class="form-label fw-bold">Titre du rapport</label>
+                        <input type="text" class="form-control" id="titre" name="titre" 
+                               value="{{ form.titre.value|default:'' }}" required>
+                        {% if form.titre.errors %}
+                            <div class="text-danger">{{ form.titre.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contenu" class="form-label fw-bold">Contenu du rapport</label>
+                        <textarea class="form-control" id="contenu" name="contenu" rows="10" 
+                                  placeholder="Décrivez votre analyse du dossier, vos observations, recommandations...">{{ form.contenu.value|default:'' }}</textarea>
+                        {% if form.contenu.errors %}
+                            <div class="text-danger">{{ form.contenu.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="document" class="form-label fw-bold">Document joint (optionnel)</label>
+                        <input type="file" class="form-control" id="document" name="document" 
+                               accept=".pdf,.doc,.docx,.txt">
+                        <small class="text-muted">Formats acceptés : PDF, DOC, DOCX, TXT (max 10MB)</small>
+                        {% if form.document.errors %}
+                            <div class="text-danger">{{ form.document.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="type_rapport" class="form-label fw-bold">Type de rapport</label>
+                        <select class="form-select" id="type_rapport" name="type_rapport">
+                            <option value="analyse_preliminaire" {% if form.type_rapport.value == 'analyse_preliminaire' %}selected{% endif %}>
+                                Analyse préliminaire
+                            </option>
+                            <option value="evaluation_detaille" {% if form.type_rapport.value == 'evaluation_detaille' %}selected{% endif %}>
+                                Évaluation détaillée
+                            </option>
+                            <option value="recommandation" {% if form.type_rapport.value == 'recommandation' %}selected{% endif %}>
+                                Recommandation
+                            </option>
+                            <option value="decision_finale" {% if form.type_rapport.value == 'decision_finale' %}selected{% endif %}>
+                                Décision finale
+                            </option>
+                            <option value="autre" {% if form.type_rapport.value == 'autre' %}selected{% endif %}>
+                                Autre
+                            </option>
+                        </select>
+                        {% if form.type_rapport.errors %}
+                            <div class="text-danger">{{ form.type_rapport.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Sauvegarder le rapport
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Informations du dossier</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Référence</label>
+                    <p class="form-control-plaintext">{{ dossier.titre }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Candidat</label>
+                    <p class="form-control-plaintext">{{ dossier.candidat.nom }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Statut</label>
+                    <p>
+                        <span class="badge bg-{% if dossier.statut == 'non_traite' %}warning{% elif dossier.statut == 'en_cours' %}info{% elif dossier.statut == 'traite' %}success{% else %}secondary{% endif %}">
+                            {{ dossier.get_statut_display }}
+                        </span>
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Date de réception</label>
+                    <p class="form-control-plaintext">{{ dossier.date_reception|date:"d/m/Y" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-lightbulb"></i> Conseils pour le rapport</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Soyez objectif et factuel</li>
+                    <li><i class="fas fa-check text-success"></i> Incluez des observations détaillées</li>
+                    <li><i class="fas fa-check text-success"></i> Proposez des recommandations claires</li>
+                    <li><i class="fas fa-check text-success"></i> Justifiez vos conclusions</li>
+                    <li><i class="fas fa-check text-success"></i> Utilisez un langage professionnel</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation côté client
+    const form = document.querySelector('form');
+    const titreInput = document.getElementById('titre');
+    const contenuInput = document.getElementById('contenu');
+    
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Validation du titre
+        if (titreInput.value.trim().length < 5) {
+            alert('Le titre doit contenir au moins 5 caractères.');
+            isValid = false;
+        }
+        
+        // Validation du contenu
+        if (contenuInput.value.trim().length < 50) {
+            alert('Le contenu du rapport doit contenir au moins 50 caractères.');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+    
+    // Prévisualisation du nom de fichier
+    const fileInput = document.getElementById('document');
+    fileInput.addEventListener('change', function() {
+        const fileName = this.files[0]?.name;
+        if (fileName) {
+            const fileInfo = document.createElement('small');
+            fileInfo.className = 'text-info';
+            fileInfo.textContent = `Fichier sélectionné : ${fileName}`;
+            
+            // Supprimer l'ancienne info si elle existe
+            const oldInfo = this.parentNode.querySelector('.text-info');
+            if (oldInfo) {
+                oldInfo.remove();
+            }
+            
+            this.parentNode.appendChild(fileInfo);
+        }
+    });
+});
+</script>
+{% endblock %} 

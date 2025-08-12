@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Importer des Dossiers depuis Excel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-file-excel"></i> Importer des Dossiers Traités depuis Excel</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                                         <!-- Instructions -->
+                     <div class="alert alert-info">
+                         <h5><i class="fas fa-info-circle"></i> Instructions d'import</h5>
+                         <ul class="mb-0">
+                             <li>Le fichier Excel contient les colonnes suivantes :</li>
+                             <li><strong>Colonne A :</strong> Numéro du dossier</li>
+                             <li><strong>Colonne B :</strong> Nom du candidat/demandeur</li>
+                             <li><strong>Colonne C :</strong> Référence ministère</li>
+                             <li><strong>Colonne D :</strong> Date d'envoi ministère</li>
+                             <li><strong>Colonne E :</strong> Référence réception</li>
+                             <li><strong>Colonne F :</strong> Date réception</li>
+                             <li><strong>Colonne H :</strong> Université</li>
+                             <li><strong>Colonne I :</strong> Pays</li>
+                             <li><strong>Colonne J :</strong> Date de l'avis</li>
+                             <li><strong>Colonne K :</strong> Avis de la commission</li>
+                             <li><strong>Colonnes L-N :</strong> Données des réunions (24 mars, 13 mai, 16 juin 2025)</li>
+                             <li>Les dossiers déjà existants (même numéro) seront ignorés</li>
+                             <li>Les réunions avec données seront automatiquement importées</li>
+                         </ul>
+                     </div>
+
+                    <!-- Formulaire d'import -->
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="excel_file" class="form-label">
+                                <i class="fas fa-upload"></i> Sélectionner le fichier Excel
+                            </label>
+                            <input type="file" name="excel_file" id="excel_file" 
+                                   class="form-control" accept=".xlsx,.xls" required>
+                            <div class="form-text">
+                                Formats acceptés : .xlsx, .xls
+                            </div>
+                        </div>
+
+                        <!-- Options d'import -->
+                        <div class="mb-4">
+                            <h5><i class="fas fa-cog"></i> Options d'import</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="skip_existing" checked>
+                                <label class="form-check-label" for="skip_existing">
+                                    Ignorer les dossiers déjà existants
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="create_default_dates" checked>
+                                <label class="form-check-label" for="create_default_dates">
+                                    Utiliser la date d'aujourd'hui pour les dates manquantes
+                                </label>
+                            </div>
+                        </div>
+
+                                                 <!-- Aperçu du fichier existant -->
+                         <div class="mb-4">
+                             <h5><i class="fas fa-eye"></i> Fichier disponible</h5>
+                             <div class="alert alert-success">
+                                 <strong>Fichier détecté :</strong> suivi -equivalence-14juillet2025-Stagiaire.xlsx
+                                 <br>
+                                 <small class="text-muted">
+                                     Ce fichier contient les données de suivi des équivalences au 14 juillet 2025
+                                 </small>
+                                 <br>
+                                 <strong>📊 Données disponibles :</strong>
+                                 <ul class="mb-0 mt-2">
+                                     <li>✅ 43 dossiers d'équivalence</li>
+                                     <li>📅 3 réunions de commission (24 mars, 13 mai, 16 juin 2025)</li>
+                                     <li>📋 Données complètes : candidats, universités, pays, avis</li>
+                                     <li>🎯 Réunions avec décisions et recommandations</li>
+                                 </ul>
+                             </div>
+                             <div class="text-center">
+                                 <a href="{% url 'dossiers:import_excel_auto' %}" class="btn btn-warning">
+                                     <i class="fas fa-bolt"></i> Import Automatique du fichier existant
+                                 </a>
+                             </div>
+                         </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'dossiers:dossiers_traites_admin' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Importer les dossiers
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Informations supplémentaires -->
+                    <div class="mt-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-lightbulb"></i> Conseils</h6>
+                                <ul class="mb-0">
+                                    <li>Assurez-vous que le fichier Excel est bien formaté</li>
+                                    <li>Vérifiez que les numéros de dossier sont uniques</li>
+                                    <li>Les champs vides seront remplacés par des valeurs par défaut</li>
+                                    <li>Après l'import, vous pourrez modifier les dossiers individuellement</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        background-color: var(--color-light-taupe);
+        border-bottom: 1px solid var(--color-muted-gold);
+    }
+    
+    .form-control:focus {
+        border-color: var(--color-dark-maroon);
+        box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: var(--color-dark-maroon);
+        border-color: var(--color-dark-maroon);
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--color-maroon);
+        border-color: var(--color-maroon);
+    }
+    
+    .alert-info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    h5 {
+        color: var(--color-dark-maroon);
+        font-weight: 600;
+    }
+</style>
+{% endblock %} 

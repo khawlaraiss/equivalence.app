@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Avis de Commission - Dossier {{ dossier.numero }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-comment"></i> Avis de la Commission</h1>
+            <p class="text-muted mb-0">Dossier {{ dossier.numero }} - {{ dossier.demandeur_candidat }}</p>
+        </div>
+        <div>
+            <a href="{% url 'dossiers:dossiers_traites_admin' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour aux dossiers traités
+            </a>
+        </div>
+    </div>
+
+    <!-- Informations du dossier -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Informations du dossier</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Numéro:</strong><br>
+                            <span class="badge bg-secondary">{{ dossier.numero }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Candidat:</strong><br>
+                            {{ dossier.demandeur_candidat }}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Université:</strong><br>
+                            {{ dossier.universite }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Pays:</strong><br>
+                            <span class="badge bg-info">{{ dossier.pays }}</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Date d'avis:</strong><br>
+                            {{ dossier.date_avis|date:"d/m/Y"|default:"Non spécifiée" }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Date de décision:</strong><br>
+                            {{ dossier.date_decision|date:"d/m/Y"|default:"Non spécifiée" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-calendar-check"></i> Réunions</h5>
+                </div>
+                <div class="card-body">
+                    {% if dossier.reunions %}
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-warning me-2">{{ dossier.get_nombre_reunions }}</span>
+                            <span>réunions enregistrées</span>
+                        </div>
+                        <a href="{% url 'dossiers:voir_reunions_dossier' dossier.id %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-eye"></i> Voir toutes les réunions
+                        </a>
+                    {% else %}
+                        <p class="text-muted">Aucune réunion enregistrée</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avis de la commission -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-comment-dots"></i> Avis de la Commission</h5>
+        </div>
+        <div class="card-body">
+            {% if dossier.avis_commission and dossier.avis_commission != "Avis non spécifié" %}
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-clipboard-check"></i> Décision de la commission:</h6>
+                    <hr>
+                    <div class="mt-3">
+                        {{ dossier.avis_commission|linebreaks }}
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="mt-4">
+                    <a href="{% url 'dossiers:modifier_dossier_traite' dossier.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Modifier le dossier
+                    </a>
+                    <a href="{% url 'dossiers:ajouter_reunion_dossier' dossier.id %}" class="btn btn-success">
+                        <i class="fas fa-calendar-plus"></i> Ajouter une réunion
+                    </a>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Aucun avis de commission disponible</strong><br>
+                    Aucun avis n'a été enregistré pour ce dossier.
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'dossiers:modifier_dossier_traite' dossier.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Ajouter un avis
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

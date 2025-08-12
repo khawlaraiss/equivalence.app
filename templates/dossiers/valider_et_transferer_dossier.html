@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}Valider et transférer - {{ dossier.titre }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-check-circle"></i> Valider et transférer le dossier</h1>
+    <div>
+        <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left"></i> Retour au dossier
+        </a>
+    </div>
+</div>
+
+<!-- Résumé du dossier -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informations du dossier</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Dossier :</strong> {{ dossier.titre }}</p>
+                <p><strong>Candidat :</strong> {{ candidat.nom }}</p>
+                <p><strong>Pays d'origine :</strong> {{ candidat.pays_origine }}</p>
+                <p><strong>Date de réception :</strong> {{ dossier.date_reception|date:"d/m/Y" }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Statut actuel :</strong> 
+                    <span class="badge bg-warning">{{ dossier.get_statut_display }}</span>
+                </p>
+                <p><strong>Professeur évaluateur :</strong> 
+                    {% for prof in dossier.professeurs.all %}
+                        {% if prof.role == 'professeur' %}
+                            {{ prof.get_full_name|default:prof.username }}
+                        {% endif %}
+                    {% endfor %}
+                </p>
+                <p><strong>Date d'évaluation :</strong> {{ consistance.date_creation|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Résumé de l'évaluation -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Résumé de l'évaluation</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary">{{ consistance.note_totale|default:0 }}/100</h3>
+                        <p class="card-text">Score total</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success">
+                            {% if consistance.note_totale >= 76 %}
+                                Excellent
+                            {% elif consistance.note_totale >= 50 %}
+                                Solide
+                            {% else %}
+                                Insuffisant
+                            {% endif %}
+                        </h3>
+                        <p class="card-text">Niveau</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-info">
+                            {% if consistance.stages_acheves %}
+                                <i class="fas fa-check text-success"></i>
+                            {% elif consistance.stages_non_acheves %}
+                                <i class="fas fa-times text-danger"></i>
+                            {% else %}
+                                <i class="fas fa-question text-warning"></i>
+                            {% endif %}
+                        </h3>
+                        <p class="card-text">Stages</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notes détaillées -->
+        <h6>Notes détaillées :</h6>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Critère</th>
+                        <th>Note maximale</th>
+                        <th>Note obtenue</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if consistance.sciences_geodesiques_note is not None %}
+                    <tr>
+                        <td><strong>Sciences géodésiques</strong></td>
+                        <td>16 points</td>
+                        <td>{{ consistance.sciences_geodesiques_note }}/16</td>
+                        <td>
+                            {% if consistance.sciences_geodesiques_note >= 8 %}
+                                <span class="badge bg-success">Acquis</span>
+                            {% else %}
+                                <span class="badge bg-danger">Non acquis</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if consistance.topographie_note is not None %}
+                    <tr>
+                        <td><strong>Topographie</strong></td>
+                        <td>16 points</td>
+                        <td>{{ consistance.topographie_note }}/16</td>
+                        <td>
+                            {% if consistance.topographie_note >= 8 %}
+                                <span class="badge bg-success">Acquis</span>
+                            {% else %}
+                                <span class="badge bg-danger">Non acquis</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if consistance.photogrammetrie_note is not None %}
+                    <tr>
+                        <td><strong>Photogrammétrie</strong></td>
+                        <td>16 points</td>
+                        <td>{{ consistance.photogrammetrie_note }}/16</td>
+                        <td>
+                            {% if consistance.photogrammetrie_note >= 8 %}
+                                <span class="badge bg-success">Acquis</span>
+                            {% else %}
+                                <span class="badge bg-danger">Non acquis</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if consistance.cartographie_note is not None %}
+                    <tr>
+                        <td><strong>Cartographie</strong></td>
+                        <td>16 points</td>
+                        <td>{{ consistance.cartographie_note }}/16</td>
+                        <td>
+                            {% if consistance.cartographie_note >= 8 %}
+                                <span class="badge bg-success">Acquis</span>
+                            {% else %}
+                                <span class="badge bg-danger">Non acquis</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if consistance.droit_foncier_note is not None %}
+                    <tr>
+                        <td><strong>Droit foncier</strong></td>
+                        <td>10 points</td>
+                        <td>{{ consistance.droit_foncier_note }}/10</td>
+                        <td>
+                            {% if consistance.droit_foncier_note >= 5 %}
+                                <span class="badge bg-success">Acquis</span>
+                            {% else %}
+                                <span class="badge bg-danger">Non acquis</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if consistance.sig_note is not None %}
+                    <tr>
+                        <td><strong>SIG</strong></td>
+                        <td>10 points</td>
+                        <td>{{ consistance.sig_note }}/10</td>
+                        <td>
+                            {% if consistance.sig_note >= 5 %}
+                                <span class="badge bg-success">Acquis</span>
+                            {% else %}
+                                <span class="badge bg-danger">Non acquis</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if consistance.teledetection_note is not None %}
+                    <tr>
+                        <td><strong>Télédétection</strong></td>
+                        <td>10 points</td>
+                        <td>{{ consistance.teledetection_note }}/10</td>
+                        <td>
+                            {% if consistance.teledetection_note >= 5 %}
+                                <span class="badge bg-success">Acquis</span>
+                            {% else %}
+                                <span class="badge bg-danger">Non acquis</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if consistance.stages_note is not None %}
+                    <tr>
+                        <td><strong>Stages</strong></td>
+                        <td>10 points</td>
+                        <td>{{ consistance.stages_note }}/10</td>
+                        <td>
+                            {% if consistance.stages_note >= 5 %}
+                                <span class="badge bg-success">Acquis</span>
+                            {% else %}
+                                <span class="badge bg-danger">Non acquis</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation de transfert -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Confirmation de transfert</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> Action à effectuer</h6>
+            <p class="mb-0">
+                En validant ce dossier, vous allez :
+            </p>
+            <ul class="mb-0 mt-2">
+                <li>Transférer le dossier vers la liste des dossiers traités</li>
+                <li>Marquer le dossier comme "traité"</li>
+                <li>Notifier le professeur que sa validation a été acceptée</li>
+                <li>Inclure toutes les notes et détails de l'évaluation</li>
+            </ul>
+        </div>
+        
+        <form method="post" class="mt-3">
+            {% csrf_token %}
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i> Valider et transférer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

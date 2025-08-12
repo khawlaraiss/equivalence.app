@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Gestion Équivalence Diplômes</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --color-black: #11100F;
+            --color-dark-maroon: #5D1C34;
+            --color-muted-gold: #A67D44;
+            --color-sage-green: #899481;
+            --color-light-taupe: #CDBCA8;
+            --color-off-white: #EFE9E1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: var(--color-off-white);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(17, 16, 15, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 2px solid var(--color-light-taupe);
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            color: var(--color-dark-maroon);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(93, 28, 52, 0.2);
+        }
+
+        .title {
+            color: var(--color-black);
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--color-sage-green);
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--color-black);
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-dark-maroon);
+            font-size: 1.1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid var(--color-light-taupe);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--color-off-white);
+            color: var(--color-black);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-dark-maroon);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(93, 28, 52, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: var(--color-sage-green);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);
+            color: var(--color-off-white);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(93, 28, 52, 0.3);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(93, 28, 52, 0.4);
+            background: linear-gradient(135deg, var(--color-black) 0%, var(--color-dark-maroon) 100%);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--color-sage-green) 0%, var(--color-muted-gold) 100%);
+            color: var(--color-off-white);
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(137, 148, 129, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(137, 148, 129, 0.4);
+            background: linear-gradient(135deg, var(--color-muted-gold) 0%, var(--color-sage-green) 100%);
+            color: var(--color-off-white);
+            text-decoration: none;
+        }
+
+        .btn-register:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--color-light-taupe);
+        }
+
+        .divider span {
+            background: var(--color-off-white);
+            padding: 0 15px;
+            color: var(--color-sage-green);
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #fee 0%, #fcc 100%);
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border-left: 4px solid #c33;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #efe 0%, #dfd 100%);
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border-left: 4px solid #3c3;
+        }
+
+        .info-text {
+            color: var(--color-sage-green);
+            font-size: 0.8rem;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .decoration {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 2px solid var(--color-muted-gold);
+            border-radius: 50%;
+            opacity: 0.1;
+        }
+
+        .decoration.top-right {
+            top: -50px;
+            right: -50px;
+        }
+
+        .decoration.bottom-left {
+            bottom: -50px;
+            left: -50px;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+            
+            .logo {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="decoration top-right"></div>
+        <div class="decoration bottom-left"></div>
+        
+        <div class="logo">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
+        <h1 class="title">Connexion</h1>
+        <p class="subtitle">Gestion Équivalence Diplômes</p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
+                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Nom d'utilisateur</label>
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" class="form-control" id="id_username" name="username" placeholder="Entrez votre nom d'utilisateur" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="id_password">Mot de passe</label>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" class="form-control" id="id_password" name="password" placeholder="Entrez votre mot de passe" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i> Se connecter
+            </button>
+        </form>
+        
+        <div class="divider">
+            <span>ou</span>
+        </div>
+        
+        <a href="{% url 'users:inscription' %}" class="btn-register">
+            <i class="fas fa-user-plus"></i> Créer un compte
+        </a>
+        
+        <p class="info-text">
+            <i class="fas fa-shield-alt"></i> 
+            Votre connexion est sécurisée
+        </p>
+    </div>
+</body>
+</html> 

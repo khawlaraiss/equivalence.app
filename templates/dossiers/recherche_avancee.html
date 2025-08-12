@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}Recherche Avancée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-search"></i> Recherche Avancée</h1>
+    <div>
+        <a href="{% url 'dossiers:dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<!-- Formulaire de recherche -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-filter"></i> Critères de recherche</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="q" class="form-label">Recherche textuelle</label>
+                <input type="text" class="form-control" id="q" name="q" value="{{ query }}" placeholder="Titre, description, nom candidat...">
+            </div>
+            <div class="col-md-3">
+                <label for="statut" class="form-label">Statut</label>
+                <select class="form-select" id="statut" name="statut">
+                    <option value="">Tous les statuts</option>
+                    <option value="non_traite" {% if statut == 'non_traite' %}selected{% endif %}>Non traité</option>
+                    <option value="en_cours" {% if statut == 'en_cours' %}selected{% endif %}>En cours</option>
+                    <option value="traite" {% if statut == 'traite' %}selected{% endif %}>Traité</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="professeur" class="form-label">Professeur</label>
+                <input type="text" class="form-control" id="professeur" name="professeur" value="{{ professeur }}" placeholder="Nom du professeur">
+            </div>
+            <div class="col-md-3">
+                <label for="date_debut" class="form-label">Date de début</label>
+                <input type="date" class="form-control" id="date_debut" name="date_debut" value="{{ date_debut }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_fin" class="form-label">Date de fin</label>
+                <input type="date" class="form-control" id="date_fin" name="date_fin" value="{{ date_fin }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+                <a href="{% url 'dossiers:recherche_avancee' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Effacer
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Résultats -->
+{% if query or statut or date_debut or date_fin or professeur %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-list"></i> Résultats de la recherche</h5>
+    </div>
+    <div class="card-body">
+        <!-- Statistiques -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="card text-white" style="background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);">
+                    <div class="card-body text-center">
+                        <h4>{{ total_trouve }}</h4>
+                        <p class="mb-0">Total trouvé</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white" style="background: linear-gradient(135deg, var(--color-sage-green) 0%, var(--color-dark-maroon) 100%);">
+                    <div class="card-body text-center">
+                        <h4>{{ par_statut.non_traite }}</h4>
+                        <p class="mb-0">Non traités</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white" style="background: linear-gradient(135deg, var(--color-muted-gold) 0%, var(--color-sage-green) 100%);">
+                    <div class="card-body text-center">
+                        <h4>{{ par_statut.en_cours }}</h4>
+                        <p class="mb-0">En cours</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white" style="background: linear-gradient(135deg, var(--color-light-taupe) 0%, var(--color-muted-gold) 100%);">
+                    <div class="card-body text-center">
+                        <h4>{{ par_statut.traite }}</h4>
+                        <p class="mb-0">Traités</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tableau des résultats -->
+        {% if dossiers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Statut</th>
+                        <th>Date réception</th>
+                        <th>Professeur(s)</th>
+                        <th>Candidat</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dossier in dossiers %}
+                    <tr>
+                        <td>
+                            <strong>{{ dossier.titre }}</strong>
+                            {% if dossier.description %}
+                            <br><small class="text-muted">{{ dossier.description|truncatechars:50 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if dossier.statut == 'non_traite' %}
+                                <span class="badge bg-warning">Non traité</span>
+                            {% elif dossier.statut == 'en_cours' %}
+                                <span class="badge bg-info">En cours</span>
+                            {% else %}
+                                <span class="badge bg-success">Traité</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ dossier.date_reception|date:"d/m/Y" }}</td>
+                        <td>
+                            {% for professeur in dossier.professeurs.all %}
+                                <span class="badge bg-secondary">{{ professeur.username }}</span>
+                            {% empty %}
+                                <span class="text-muted">Aucun</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if dossier.candidat %}
+                                {{ dossier.candidat.nom }}
+                                <br><small class="text-muted">{{ dossier.candidat.pays_origine }}</small>
+                            {% else %}
+                                <span class="text-muted">Non défini</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if dossier.candidat %}
+                            <a href="{% url 'dossiers:evaluation_equivalence' dossier.id %}" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-chart-bar"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5>Aucun résultat trouvé</h5>
+            <p class="text-muted">Essayez de modifier vos critères de recherche</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %} 

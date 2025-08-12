@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer une réunion{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-calendar-plus text-success"></i> Créer une réunion</h1>
+            <p class="text-muted mb-0">Planifier une réunion pour {{ dossiers_count }} dossier(s) sélectionné(s)</p>
+        </div>
+        <div>
+            <a href="{% url 'dossiers:dossiers_traites_admin' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Formulaire de création -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit"></i> Informations de la réunion
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="dossiers_ids" value="{{ dossiers_ids }}">
+                        
+                        <div class="mb-3">
+                            <label for="titre" class="form-label">
+                                <i class="fas fa-heading"></i> Titre de la réunion <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="titre" name="titre" required 
+                                   placeholder="Ex: Réunion d'évaluation du 15/01/2025">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="date_reunion" class="form-label">
+                                <i class="fas fa-calendar-alt"></i> Date et heure de la réunion <span class="text-danger">*</span>
+                            </label>
+                            <input type="datetime-local" class="form-control" id="date_reunion" name="date_reunion" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-file-alt"></i> Description générale de la réunion
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="2" 
+                                      placeholder="Description générale de la réunion..."></textarea>
+                        </div>
+                        
+                        <!-- Décisions individuelles pour chaque dossier -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-gavel"></i> Décisions pour chaque dossier <span class="text-danger">*</span>
+                            </label>
+                            <div class="border rounded p-3 bg-light">
+                                {% for dossier in dossiers %}
+                                <div class="mb-3">
+                                    <label for="decision_{{ dossier.id }}" class="form-label fw-bold">
+                                        <span class="badge bg-secondary">{{ dossier.numero }}</span>
+                                        {{ dossier.demandeur_candidat }}
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="decision_{{ dossier.id }}" 
+                                              name="decision_{{ dossier.id }}" 
+                                              rows="3" 
+                                              placeholder="Décision/commentaire spécifique pour ce dossier..." 
+                                              required></textarea>
+                                    <small class="text-muted">Référence: {{ dossier.reference }}</small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-calendar-plus"></i> Créer la réunion
+                            </button>
+                            <a href="{% url 'dossiers:dossiers_traites_admin' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aperçu des dossiers sélectionnés -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list"></i> Dossiers sélectionnés ({{ dossiers_count }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if dossiers %}
+                        <div class="list-group list-group-flush">
+                            {% for dossier in dossiers %}
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <span class="badge bg-secondary">{{ dossier.numero }}</span>
+                                            {{ dossier.demandeur_candidat }}
+                                        </h6>
+                                        <p class="mb-1 text-muted small">
+                                            {{ dossier.reference }}
+                                        </p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-university"></i> {{ dossier.universite|truncatechars:30 }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>Aucun dossier sélectionné</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Informations sur la réunion -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Informations
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-users text-primary"></i>
+                            <strong>Participants :</strong> Administrateur ({{ user.get_full_name|default:user.username }})
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-folder text-success"></i>
+                            <strong>Dossiers :</strong> {{ dossiers_count }} dossier(s) traité(s)
+                        </li>
+                        <li>
+                            <i class="fas fa-clock text-warning"></i>
+                            <strong>Statut :</strong> À planifier
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ea57a 100%);
+    transform: translateY(-1px);
+}
+
+.form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+</style>
+
+<script>
+// Définir la date minimale à maintenant
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('date_reunion');
+    if (dateInput) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        const minDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+        dateInput.min = minDate;
+        
+        // Définir une date par défaut (dans 7 jours)
+        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const nextYear = nextWeek.getFullYear();
+        const nextMonth = String(nextWeek.getMonth() + 1).padStart(2, '0');
+        const nextDay = String(nextWeek.getDate()).padStart(2, '0');
+        
+        const defaultDate = `${nextYear}-${nextMonth}-${nextDay}T09:00`;
+        dateInput.value = defaultDate;
+    }
+});
+</script>
+{% endblock %}

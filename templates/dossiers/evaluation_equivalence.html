@@ -1,0 +1,495 @@
+{% extends 'base.html' %}
+
+{% block title %}Évaluation d'Équivalence - {{ candidat.nom }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-graduation-cap"></i> Évaluation d'Équivalence</h1>
+    <div>
+        {% if user.role == 'professeur' %}
+        <a href="{% url 'dossiers:consistance_academique' dossier.id %}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-edit"></i> Modifier la consistance académique
+        </a>
+        {% endif %}
+        <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left"></i> Retour au dossier
+        </a>
+        <a href="{% url 'dossiers:exporter_evaluation_pdf' dossier.id %}" class="btn btn-success me-2">
+            <i class="fas fa-file-pdf"></i> Exporter PDF
+        </a>
+        <button class="btn btn-info" onclick="window.print()">
+            <i class="fas fa-print"></i> Imprimer
+        </button>
+    </div>
+</div>
+
+<!-- Décision antérieure (si applicable) -->
+{% if a_decision_anterieure %}
+<div class="card mb-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="fas fa-history"></i> ⚠️ Décision Antérieure</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <h6><i class="fas fa-exclamation-triangle"></i> Attention : Ce dossier a une décision antérieure</h6>
+            <p><strong>Date de la décision antérieure :</strong> {{ date_decision_anterieure|date:"d/m/Y" }}</p>
+            <p><strong>Détails :</strong> {{ decision_anterieure }}</p>
+        </div>
+        
+        <!-- Processus de réévaluation masqué -->
+        
+        <!-- Bouton pour commencer l'évaluation (seulement pour les professeurs) -->
+        {% if user.role == 'professeur' %}
+        <div class="mt-4 text-center">
+            <a href="{% url 'dossiers:consistance_academique' dossier.id %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-edit"></i> Commencer l'évaluation académique
+            </a>
+            <p class="text-muted mt-2">
+                <small>Cliquez ici pour commencer l'évaluation complète du candidat</small>
+            </p>
+        </div>
+        {% else %}
+        <!-- Commentaire masqué pour les administrateurs -->
+        {% endif %}
+    </div>
+</div>
+
+<!-- Si pas d'évaluation actuelle, ne pas afficher la grille -->
+{% if not consistance or note_totale == 0 %}
+    <!-- Pas d'évaluation à afficher -->
+{% else %}
+    <!-- Aucune évaluation à afficher -->
+{% endif %}
+{% endif %}
+
+
+
+<!-- Résumé de l'interprétation (seulement si évaluation existante avec des notes) -->
+{% if consistance and note_totale and note_totale > 0 and donnees_evaluation and donnees_evaluation|length > 0 %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-calculator fa-2x mb-2"></i>
+                <h3 class="card-title">{{ note_totale|default:0 }}</h3>
+                <p class="card-text">Score Total / 100</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-sage-green) 0%, var(--color-muted-gold) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                <h3 class="card-title">{{ interpretation_globale.titre }}</h3>
+                <p class="card-text">{{ interpretation_globale.niveau|title }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg, var(--color-light-taupe) 0%, var(--color-sage-green) 100%);">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                <h3 class="card-title">{{ consistance.date_creation|date:"d/m/Y" }}</h3>
+                <p class="card-text">Date d'évaluation</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Grille d'évaluation avec interprétation (seulement si évaluation existante avec des notes) -->
+{% if consistance and note_totale and note_totale > 0 and donnees_evaluation and donnees_evaluation|length > 0 %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Grille d'évaluation et interprétation des résultats</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Critère</th>
+                        <th>Note maximale</th>
+                        <th>Note obtenue</th>
+                        <th>Statut</th>
+                        <th>Commentaires</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evaluation in donnees_evaluation %}
+                    <tr>
+                        <td><strong>{{ evaluation.critere }}</strong></td>
+                        <td>{{ evaluation.note_max }} points</td>
+                        <td>
+                            <span class="badge bg-{% if evaluation.acquis %}success{% else %}danger{% endif %}">
+                                {{ evaluation.note }}/{{ evaluation.note_max }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if evaluation.acquis %}
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Acquis</span>
+                            {% else %}
+                                <span class="badge bg-danger"><i class="fas fa-times"></i> Non acquis</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if evaluation.commentaires %}
+                                <small class="text-muted">{{ evaluation.commentaires }}</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-primary">
+                        <td colspan="2"><strong>TOTAL</strong></td>
+                        <td><strong>{{ note_totale|default:0 }}/100</strong></td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <!-- Interprétation intégrée -->
+        <div class="mt-4">
+            <h6><i class="fas fa-search"></i> Interprétation des résultats</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Seuils de décision :</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check-circle text-success"></i> 76 à 100 points : Formation validée avec excellence</li>
+                        <li><i class="fas fa-exclamation-triangle text-warning"></i> 50 à 75 points : Formation solide, équivalence recommandée sous conditions</li>
+                        <li><i class="fas fa-times-circle text-danger"></i> < 50 points : Formation insuffisante</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Interprétation du score ({{ note_totale|default:0 }} points) :</h6>
+                    <div class="alert alert-{{ interpretation_globale.couleur }}">
+                        <h6><i class="{{ interpretation_globale.icone }}"></i> {{ interpretation_globale.titre }}</h6>
+                        <p class="mb-0">{{ interpretation_globale.description }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if evaluation_criteres.criteres_non_acquis %}
+            <div class="mt-3">
+                <h6>Critères non acquis (note < 50% de la note maximale) :</h6>
+                <div class="alert alert-warning">
+                    <ul class="mb-0">
+                        {% for critere in evaluation_criteres.criteres_non_acquis %}
+                        <li><strong>{{ critere }}</strong></li>
+                        {% endfor %}
+                    </ul>
+                    <p class="mb-0 mt-2"><strong>Note :</strong> Les critères obligatoires ayant une note inférieure à 50% de la note allouée sont considérés non acquis.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Section Stages et professionnalisation (seulement si évaluation existante avec des notes) -->
+{% if consistance and note_totale and note_totale > 0 and donnees_evaluation and donnees_evaluation|length > 0 %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-briefcase"></i> Stages et professionnalisation</h5>
+    </div>
+    <div class="card-body">
+        {% if consistance.stages_acheves %}
+            <div class="alert alert-success">
+                <h6><i class="fas fa-check-circle"></i> Stages achevés</h6>
+                <p class="mb-0">Le candidat a effectué les stages requis.</p>
+            </div>
+            
+            <!-- Stages effectués -->
+            <div class="mt-3">
+                <h6>Stages effectués :</h6>
+                <ul class="list-group list-group-flush">
+                    {% if consistance.stage_conservation_fonciere %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Stage conservation foncière ANCFCC</strong> (1 semaine)
+                        </li>
+                    {% endif %}
+                    
+                    {% if consistance.stage_cadastre %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Stage cadastre ANCFCC</strong> (2 semaines)
+                        </li>
+                    {% endif %}
+                    
+                    {% if consistance.stage_geodesie %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Stage de Géodésie</strong> (2 semaines)
+                        </li>
+                    {% endif %}
+                    
+                    {% if consistance.stage_topographie %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Stage de Topographie</strong> (2 semaines)
+                        </li>
+                    {% endif %}
+                    
+                    {% if consistance.stage_photogrammetrie %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check text-success"></i>
+                            <strong>Stage de Photogrammétrie</strong> (2 semaines)
+                        </li>
+                    {% endif %}
+                    
+                    <!-- Stages configurables effectués -->
+                    {% if consistance.stages_configurables_cochees %}
+                        {% for stage_id in consistance.stages_configurables_cochees %}
+                            {% for stage in structure.stages_configurables %}
+                                {% if stage.id == stage_id %}
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check text-success"></i>
+                                        <strong>{{ stage.nom }}</strong> ({{ stage.duree }})
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </div>
+            
+            {% if consistance.stages_contenus %}
+                <div class="mt-3">
+                    <h6>Contenus des stages :</h6>
+                    <div class="alert alert-info">
+                        <p class="mb-0">{{ consistance.stages_contenus }}</p>
+                    </div>
+                </div>
+            {% endif %}
+            
+        {% elif consistance.stages_non_acheves %}
+            <div class="alert alert-warning">
+                <h6><i class="fas fa-exclamation-triangle"></i> Stages non achevés</h6>
+                <p class="mb-0">Le candidat doit effectuer les stages requis.</p>
+            </div>
+            
+            {% if consistance.message_stages_non_acheves %}
+                <div class="mt-3">
+                    <h6>Message concernant les stages :</h6>
+                    <div class="alert alert-warning">
+                        <p class="mb-0">{{ consistance.message_stages_non_acheves }}</p>
+                    </div>
+                </div>
+            {% endif %}
+            
+        {% else %}
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle"></i> État des stages non défini</h6>
+                <p class="mb-0">L'état des stages n'a pas encore été évalué.</p>
+            </div>
+        {% endif %}
+        
+        {% if consistance.stages_note is not None %}
+            <div class="mt-3">
+                <h6>Note des stages :</h6>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-{% if consistance.stages_note >= 5 %}success{% else %}danger{% endif %} me-2">
+                        {{ consistance.stages_note }}/10
+                    </span>
+                    <small class="text-muted">Note des stages (non incluse dans le total)</small>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Décision de la commission (seulement si évaluation existante avec des notes) -->
+{% if consistance and note_totale and note_totale > 0 and donnees_evaluation and donnees_evaluation|length > 0 %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-gavel"></i> Décision de la commission</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Décisions possibles :</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-graduation-cap text-primary"></i>
+                        <strong>Validation Master 120 crédits :</strong> Le candidat doit valider le master en 120 crédits conformément à la norme de délivrance des programmes Masters. Le candidat doit à cet effet fournir un justificatif ou un complément de crédits de son Master.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-file-alt text-info"></i>
+                        <strong>Descriptif détaillé des cours :</strong> Le candidat doit fournir en plus de la liste des cours un descriptif détaillé de chaque cours et stage relatifs aux cursus Bachelor et Master pour permettre à la commission d'examiner son dossier.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-briefcase text-warning"></i>
+                        <strong>Stage techniques cadastrales :</strong> Le candidat doit effectuer un stage sur les techniques cadastrales dans un service du cadastre de l'ANCFCC et fournir un rapport de stage et une attestation du stage.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-map-marked-alt text-success"></i>
+                        <strong>Stage géodésie :</strong> Le candidat doit effectuer un stage sur la géodésie au sein d'une entreprise topographique et fournir un rapport de stage et une attestation du stage.
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Décision recommandée :</h6>
+                <div class="alert alert-{{ interpretation_globale.couleur }}">
+                    <h6><i class="{{ interpretation_globale.icone }}"></i> Recommandation basée sur l'évaluation</h6>
+                    <p class="mb-0">{{ interpretation_globale.description }}</p>
+                </div>
+                
+                {% if evaluation_criteres.criteres_non_acquis %}
+                <div class="mt-3">
+                    <h6>Actions spécifiques recommandées :</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for critere in evaluation_criteres.criteres_non_acquis %}
+                        <li class="list-group-item">
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                            <strong>{{ critere }} :</strong> Renforcer les compétences dans ce domaine
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="mt-4">
+                <h6>Commentaires de la commission :</h6>
+                <textarea name="commentaires_commission" class="form-control" rows="4" placeholder="Ajoutez ici les commentaires spécifiques de la commission...">{% if decision_commission %}{{ decision_commission.commentaires }}{% endif %}</textarea>
+            </div>
+            
+            <div class="mt-3">
+                <h6>Décision de la commission :</h6>
+                <select name="decision_type" class="form-select">
+                    <option value="equivalence_accorder" {% if decision_commission and decision_commission.decision == 'equivalence_accorder' %}selected{% endif %}>Équivalence accordée</option>
+                    <option value="completement_dossier" {% if decision_commission and decision_commission.decision == 'completement_dossier' %}selected{% endif %}>Complètement de dossier</option>
+                    <option value="invitation_soutenance" {% if decision_commission and decision_commission.decision == 'invitation_soutenance' %}selected{% endif %}>Invitation soutenance</option>
+                    <option value="invitation_concours" {% if decision_commission and decision_commission.decision == 'invitation_concours' %}selected{% endif %}>Invitation concours</option>
+                    <option value="non_equivalent" {% if decision_commission and decision_commission.decision == 'non_equivalent' %}selected{% endif %}>Non équivalent</option>
+                </select>
+            </div>
+            
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Enregistrer les commentaires
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Actions -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-cogs"></i> Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="btn-group" role="group">
+            <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-outline-primary">
+                <i class="fas fa-eye"></i> Voir le dossier
+            </a>
+            {% if user.role == 'professeur' %}
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#retourAdminModal">
+                <i class="fas fa-arrow-up"></i> Retour à l'admin
+            </button>
+            {% endif %}
+            <button class="btn btn-outline-success" onclick="window.print()">
+                <i class="fas fa-print"></i> Imprimer
+            </button>
+            <button class="btn btn-outline-info" onclick="exporterPDF()">
+                <i class="fas fa-file-pdf"></i> Exporter PDF
+            </button>
+        </div>
+        
+        <!-- Modal pour retour à l'admin -->
+        {% if user.role == 'professeur' %}
+        <div class="modal fade" id="retourAdminModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-arrow-up"></i> Retour à l'administrateur
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle"></i> Confirmation</h6>
+                            <p class="mb-0">
+                                En envoyant ce dossier à l'administrateur, vous confirmez que l'évaluation est terminée et prête pour validation.
+                                L'administrateur recevra une notification "Retour du dossier traité" et pourra voir tous les détails.
+                            </p>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Résumé de l'évaluation :</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <strong>Score total :</strong> {{ note_totale|default:0 }}/100 points
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Niveau :</strong> {{ interpretation_globale.titre }}
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Date d'évaluation :</strong> {{ consistance.date_creation|date:"d/m/Y" }}
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <label for="message_professeur" class="form-label">Message à l'administrateur (optionnel) :</label>
+                            <textarea class="form-control" id="message_professeur" name="message_professeur" rows="3" 
+                                      placeholder="Ex: Maintenant tout est réglé, le candidat a fourni tous les documents demandés..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Annuler
+                        </button>
+                        <form method="post" action="{% url 'dossiers:consistance_academique' dossier.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="retour_admin" value="1">
+                            <input type="hidden" name="message_professeur" id="message_professeur_hidden">
+                            <button type="submit" class="btn btn-primary" onclick="submitRetourAdmin()">
+                                <i class="fas fa-arrow-up"></i> Retour à l'admin
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exporterPDF() {
+    // Logique pour exporter en PDF
+    alert('Fonctionnalité d\'export PDF à implémenter');
+}
+
+function submitRetourAdmin() {
+    // Récupérer le message du professeur et le mettre dans le champ caché
+    const message = document.getElementById('message_professeur').value;
+    document.getElementById('message_professeur_hidden').value = message;
+}
+</script>
+
+<style>
+/* Masquer les boutons lors de l'impression */
+@media print {
+    .btn, .d-print-none {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %} 

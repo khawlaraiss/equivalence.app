@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-users"></i> Gestion des Utilisateurs</h1>
+        <a href="{% url 'users:create_user' %}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Nouvel utilisateur
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white" style="background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3 class="card-title">{{ total_utilisateurs }}</h3>
+                    <p class="card-text">Total utilisateurs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white" style="background: linear-gradient(135deg, var(--color-muted-gold) 0%, var(--color-dark-maroon) 100%);">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-shield fa-2x mb-2"></i>
+                    <h3 class="card-title">{{ administrateurs }}</h3>
+                    <p class="card-text">Administrateurs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white" style="background: linear-gradient(135deg, var(--color-light-taupe) 0%, var(--color-sage-green) 100%);">
+                <div class="card-body text-center">
+                    <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
+                    <h3 class="card-title">{{ professeurs }}</h3>
+                    <p class="card-text">Professeurs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row">
+                <div class="col-md-4">
+                    <select name="role" class="form-select">
+                        <option value="">Tous les rôles</option>
+                        <option value="admin" {% if request.GET.role == 'admin' %}selected{% endif %}>Administrateur</option>
+                        <option value="professeur" {% if request.GET.role == 'professeur' %}selected{% endif %}>Professeur</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des utilisateurs -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-list"></i> Liste des Utilisateurs</h5>
+        </div>
+        <div class="card-body">
+            {% if utilisateurs %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom d'utilisateur</th>
+                                <th>Nom complet</th>
+                                <th>Email</th>
+                                <th>Rôle</th>
+                                <th>Statut</th>
+                                <th>Date d'inscription</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for utilisateur in utilisateurs %}
+                            <tr>
+                                <td>
+                                    <strong>{{ utilisateur.username }}</strong>
+                                </td>
+                                <td>
+                                    {% if utilisateur.first_name or utilisateur.last_name %}
+                                        {{ utilisateur.first_name }} {{ utilisateur.last_name }}
+                                    {% else %}
+                                        <span class="text-muted">Non renseigné</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ utilisateur.email }}</td>
+                                <td>
+                                    <span class="badge bg-{% if utilisateur.role == 'admin' %}danger{% else %}info{% endif %}">
+                                        {{ utilisateur.get_role_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if utilisateur.is_active %}success{% else %}secondary{% endif %}">
+                                        {% if utilisateur.is_active %}Actif{% else %}Inactif{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ utilisateur.date_joined|date:"d/m/Y" }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'users:modifier_utilisateur' utilisateur.id %}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if utilisateur.is_active %}
+                                            <button class="btn btn-sm btn-outline-warning" onclick="desactiverUtilisateur({{ utilisateur.id }})" title="Désactiver">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-outline-success" onclick="desactiverUtilisateur({{ utilisateur.id }})" title="Activer">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-outline-danger" onclick="supprimerUtilisateur({{ utilisateur.id }}, '{{ utilisateur.username }}')" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">Aucun utilisateur trouvé</h4>
+                    <p class="text-muted">Commencez par créer votre premier utilisateur</p>
+                    <a href="{% url 'users:create_user' %}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Créer un utilisateur
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function desactiverUtilisateur(id) {
+    const action = event.target.closest('button').title.toLowerCase();
+    const message = action === 'désactiver' 
+        ? 'Êtes-vous sûr de vouloir désactiver cet utilisateur ?'
+        : 'Êtes-vous sûr de vouloir activer cet utilisateur ?';
+    
+    if (confirm(message)) {
+        // Créer un formulaire temporaire pour la désactivation/activation
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'users:desactiver_utilisateur' 0 %}".replace('0', id);
+        
+        // Ajouter le token CSRF
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        if (!csrfToken) {
+            alert('Erreur: Token CSRF non trouvé. Veuillez recharger la page.');
+            return;
+        }
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // Soumettre le formulaire
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function supprimerUtilisateur(id, username) {
+    const message = `⚠️ ATTENTION ! Êtes-vous ABSOLUMENT sûr de vouloir supprimer l'utilisateur "${username}" ?\n\nCette action est IRREVERSIBLE et supprimera définitivement :\n• Toutes les données de l'utilisateur\n• Son historique\n• Ses dossiers attribués\n\nCette action ne peut pas être annulée !`;
+    
+    if (confirm(message)) {
+        // Créer un formulaire temporaire pour la suppression
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'users:supprimer_utilisateur' 0 %}".replace('0', id);
+        
+        // Ajouter le token CSRF
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        if (!csrfToken) {
+            alert('Erreur: Token CSRF non trouvé. Veuillez recharger la page.');
+            return;
+        }
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // Soumettre le formulaire
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        background-color: var(--color-light-taupe);
+        border-bottom: 1px solid var(--color-muted-gold);
+    }
+    
+    .btn-group .btn {
+        margin-right: 0.25rem;
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: var(--color-dark-maroon);
+    }
+</style>
+{% endblock %} 

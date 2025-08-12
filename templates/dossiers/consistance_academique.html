@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consistance Académique - {{ candidat.nom }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --color-black: #11100F;
+            --color-dark-maroon: #5D1C34;
+            --color-muted-gold: #A67D44;
+            --color-sage-green: #899481;
+            --color-light-taupe: #CDBCA8;
+            --color-off-white: #EFE9E1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px solid var(--color-dark-maroon);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--color-dark-maroon);
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            color: var(--color-black);
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .candidate-info {
+            background: var(--color-off-white);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--color-dark-maroon);
+        }
+
+        .candidate-info h3 {
+            color: var(--color-dark-maroon);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .info-label {
+            font-weight: bold;
+            min-width: 120px;
+            color: var(--color-black);
+        }
+
+        .info-value {
+            color: var(--color-dark-maroon);
+            font-weight: 500;
+        }
+
+        .consistance-section {
+            background: white;
+            border: 1px solid var(--color-light-taupe);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);
+            color: white;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .consistance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .consistance-table th {
+            background: var(--color-dark-maroon);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid var(--color-dark-maroon);
+            vertical-align: middle;
+        }
+
+        .consistance-table td {
+            padding: 12px 8px;
+            border: 1px solid var(--color-light-taupe);
+            vertical-align: top;
+        }
+
+        .consistance-table .critere-cell {
+            background: var(--color-off-white);
+            font-weight: bold;
+            color: var(--color-dark-maroon);
+            width: 15%;
+            text-align: center;
+        }
+
+        .consistance-table .competences-cell {
+            background: #f8f9fa;
+            width: 25%;
+            font-size: 12px;
+        }
+
+        .consistance-table .contenus-cell {
+            width: 25%;
+        }
+
+        .consistance-table .commentaires-cell {
+            width: 20%;
+        }
+
+        .consistance-table .notes-cell {
+            width: 15%;
+            text-align: center;
+        }
+
+        .competences-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .competences-list .main-item {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .competences-list .sub-item {
+            margin: 4px 0;
+            padding: 2px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .competences-list .sub-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #3498db;
+        }
+        
+        .competences-list .sub-item input[type="checkbox"]:checked {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        
+        .competences-list .sub-item label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        /* Section d'interprétation des résultats */
+        .interpretation-section {
+            background: white;
+            border: 1px solid var(--color-light-taupe);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .alert {
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left-color: #ffc107;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left-color: #17a2b8;
+        }
+        
+        .alert h4 {
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .alert p {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .criteres-details {
+            padding: 20px;
+        }
+        
+        .criteres-details h5 {
+            color: var(--color-dark-maroon);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .criteres-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .critere-item {
+            padding: 15px;
+            border-radius: 6px;
+            border: 2px solid;
+        }
+        
+        .critere-acquis {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        
+        .critere-non-acquis {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        
+        .critere-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .critere-nom {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .critere-status {
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .critere-status i {
+            margin-right: 5px;
+        }
+        
+        .note-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        .note-actuelle {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .note-minimale {
+            color: #666;
+        }
+        
+        .pourcentage {
+            font-weight: bold;
+        }
+        
+        /* Critères personnalisés */
+        .critere-personnalise {
+            background: #f8f9fa;
+            border-left: 4px solid var(--color-muted-gold);
+        }
+        
+        .critere-personnalise-info {
+            color: var(--color-muted-gold);
+            font-style: italic;
+            font-size: 12px;
+        }
+        
+        .critere-actions {
+            margin-top: 10px;
+        }
+        
+        .btn-supprimer-critere {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .btn-supprimer-critere:hover {
+            background: #c82333;
+        }
+        
+        /* Section d'ajout de critères */
+        .ajouter-critere-section {
+            background: var(--color-off-white);
+            border: 2px dashed var(--color-sage-green);
+        }
+        
+        .ajouter-critere-form {
+            padding: 20px;
+        }
+        
+        .ajouter-critere-form h5 {
+            color: var(--color-dark-maroon);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .form-group {
+            flex: 1;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--color-black);
+            font-size: 12px;
+        }
+        
+        .btn-ajouter-critere {
+            background: var(--color-sage-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-ajouter-critere:hover {
+            background: var(--color-dark-maroon);
+            transform: translateY(-2px);
+        }
+
+        /* Styles pour la section Stages */
+        .stages-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--color-off-white);
+            border-radius: 6px;
+            border-left: 3px solid var(--color-dark-maroon);
+        }
+
+        .stages-list {
+            margin-bottom: 15px;
+        }
+
+        .stage-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            padding: 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid var(--color-light-taupe);
+        }
+
+        .stage-item input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.1);
+        }
+
+        .stage-item label {
+            margin: 0;
+            font-weight: 500;
+            color: var(--color-black);
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .stage-item:hover {
+            background: var(--color-light-taupe);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--color-light-taupe);
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+            color: var(--color-black);
+            resize: vertical;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-dark-maroon);
+        }
+
+        .form-control.textarea {
+            height: 80px;
+        }
+
+        .form-control.note {
+            width: 60px;
+            text-align: center;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid var(--color-light-taupe);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-dark-maroon) 0%, var(--color-black) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(93, 28, 52, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--color-sage-green);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-dark-maroon);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--color-dark-maroon);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--color-black);
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        .note-total {
+            background: var(--color-off-white);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            text-align: center;
+            border-left: 4px solid var(--color-dark-maroon);
+        }
+
+        .note-total h4 {
+            color: var(--color-dark-maroon);
+            margin-bottom: 10px;
+        }
+
+        .note-total .total-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-dark-maroon);
+        }
+
+        @media (max-width: 1200px) {
+            .consistance-table {
+                font-size: 11px;
+            }
+            
+            .consistance-table th,
+            .consistance-table td {
+                padding: 8px 4px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .consistance-table {
+                font-size: 10px;
+            }
+        }
+        
+        /* Styles pour les boutons de stages */
+        .stages-buttons-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stage-button {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--color-dark-maroon);
+        }
+        
+        .stage-button input[type="radio"] {
+            margin-right: 8px;
+        }
+        
+        .stage-button i {
+            margin-right: 8px;
+        }
+        
+        .stage-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stage-acheves {
+            border: 2px solid var(--color-sage-green);
+        }
+        
+        .stage-acheves.stage-button-active {
+            background: var(--color-sage-green);
+            color: white;
+        }
+        
+        .stage-non-acheves {
+            border: 2px solid var(--color-muted-gold);
+        }
+        
+        .stage-non-acheves.stage-button-active {
+            background: var(--color-muted-gold);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Retour au dossier
+        </a>
+
+        <div class="header">
+            <h1>CONSISTANCE ACADÉMIQUE</h1>
+            <h2>Évaluation des compétences du candidat</h2>
+        </div>
+
+        <!-- Section d'interprétation des résultats -->
+        {% if evaluation_resultats.total_criteres_evalues > 0 %}
+        <div class="interpretation-section">
+            <div class="section-header">
+                <i class="fas fa-chart-line"></i> INTERPRÉTATION DES RÉSULTATS
+            </div>
+            <div class="section-content">
+                <!-- Interprétation globale -->
+                <div class="alert alert-{{ interpretation_globale.couleur }}">
+                    <h4><i class="{{ interpretation_globale.icone }}"></i> {{ interpretation_globale.titre }}</h4>
+                    <p><strong>Note totale :</strong> {{ interpretation_globale.note_totale }}/{{ interpretation_globale.note_max }} points</p>
+                    <p><strong>Interprétation :</strong> {{ interpretation_globale.description }}</p>
+                </div>
+
+                <!-- Règles d'évaluation -->
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle"></i> Règles d'évaluation</h5>
+                    <ul>
+                        <li><strong>76 à 100 points :</strong> Formation validée avec excellence, parfaitement en adéquation avec les exigences du diplôme d'ingénieur topographe de l'IAV Hassan II avec possibilité d'exiger les stages complémentaires.</li>
+                        <li><strong>50 à 75 points :</strong> Formation solide, équivalence recommandée sous conditions des améliorations sous forme de formations complémentaires et de stages.</li>
+                        <li><strong>Moins de 50 points :</strong> Formation insuffisante pour obtenir l'équivalence. Formation Académique diplômante obligatoire.</li>
+                    </ul>
+                </div>
+
+                <!-- Détail des critères obligatoires -->
+                <div class="criteres-details">
+                    <h5><i class="fas fa-list-check"></i> Détail des critères obligatoires :</h5>
+                    <p><em>Règle : Les critères obligatoires ayant une note inférieure à 50% de la note allouée sont considérés non acquis.</em></p>
+                    <div class="criteres-grid">
+                        {% for critere, details in evaluation_resultats.criteres.items %}
+                        {% if not details.personnalise %}
+                        <div class="critere-item {% if details.acquis %}critere-acquis{% else %}critere-non-acquis{% endif %}">
+                            <div class="critere-header">
+                                <span class="critere-nom">{{ critere|title }}</span>
+                                <span class="critere-status">
+                                    {% if details.acquis %}
+                                        <i class="fas fa-check-circle"></i> Acquis
+                                    {% else %}
+                                        <i class="fas fa-times-circle"></i> Non acquis
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="critere-details">
+                                <div class="note-info">
+                                    <span class="note-actuelle">{{ details.note }}/{{ details.note_max }}</span>
+                                    <span class="note-minimale">(Min: {{ details.note_min }})</span>
+                                    <span class="pourcentage">({{ details.pourcentage|floatformat:1 }}%)</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Critères personnalisés -->
+                {% if evaluation_resultats.criteres %}
+                <div class="criteres-details">
+                    <h5><i class="fas fa-plus-circle"></i> Critères personnalisés ajoutés :</h5>
+                    <div class="criteres-grid">
+                        {% for critere, details in evaluation_resultats.criteres.items %}
+                        {% if details.personnalise %}
+                        <div class="critere-item {% if details.acquis %}critere-acquis{% else %}critere-non-acquis{% endif %}">
+                            <div class="critere-header">
+                                <span class="critere-nom">{{ details.nom }}</span>
+                                <span class="critere-status">
+                                    {% if details.acquis %}
+                                        <i class="fas fa-check-circle"></i> Acquis
+                                    {% else %}
+                                        <i class="fas fa-times-circle"></i> Non acquis
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="critere-details">
+                                <div class="note-info">
+                                    <span class="note-actuelle">{{ details.note }}/{{ details.note_max }}</span>
+                                    <span class="note-minimale">(Min: {{ details.note_min }})</span>
+                                    <span class="pourcentage">({{ details.pourcentage|floatformat:1 }}%)</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="candidate-info">
+            <h3><i class="fas fa-folder"></i> Informations du Dossier</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Référence :</span>
+                    <span class="info-value">{{ dossier.titre }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date de référence :</span>
+                    <span class="info-value">{{ dossier.date_reception|date:"d/m/Y"|default:"Non spécifiée" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="consistance-section">
+                <div class="section-header">
+                    <i class="fas fa-table"></i> TABLEAU D'ÉVALUATION DE LA CONSISTANCE ACADÉMIQUE
+                </div>
+                <div class="section-content">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Information :</strong> Évaluez la consistance académique du candidat selon les critères établis. Remplissez les contenus suivis et attribuez des notes.
+                    </div>
+
+                    <table class="consistance-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">N°</th>
+                                <th>Critères</th>
+                                <th>Compétences sommaires de Référence</th>
+                                <th>Contenus suivis par les candidats</th>
+                                <th>Commentaires</th>
+                                <th>Poids/Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Sciences géodésiques obligatoires -->
+                            {% if 'sciences_geodesiques' not in structure.criteres_fixes_supprimes %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">1</td>
+                                <td class="critere-cell">
+                                    Sciences géodésiques obligatoires<br>
+                                    <strong>({{ structure.sciences_geodesiques_note_max }} points)</strong>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise des principes fondamentaux :</li>
+                                        {% for comp in structure.competences_criteres_fixes.sciences_geodesiques %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" name="sciences_geodesiques_comp_{{ forloop.counter0 }}" id="sciences_geodesiques_comp_{{ forloop.counter0 }}" 
+                                                   {% if forloop.counter0 in sciences_geodesiques_competences_cochees %}checked{% endif %}>
+                                            {{ comp }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" name="sciences_geodesiques_contenus" 
+                                              placeholder="Décrivez les contenus suivis par le candidat...">{{ consistance.sciences_geodesiques_contenus }}</textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" name="sciences_geodesiques_commentaires" 
+                                              placeholder="Commentaires...">{{ consistance.sciences_geodesiques_commentaires }}</textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" name="sciences_geodesiques_note" 
+                                           min="0" max="{{ structure.sciences_geodesiques_note_max }}" required value="{% if consistance.sciences_geodesiques_note is not None %}{{ consistance.sciences_geodesiques_note }}{% endif %}"
+                                           placeholder="0-{{ structure.sciences_geodesiques_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Topographie obligatoire -->
+                            {% if 'topographie' not in structure.criteres_fixes_supprimes %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">2</td>
+                                <td class="critere-cell">
+                                    Topographie obligatoire<br>
+                                    <strong>({{ structure.topographie_note_max }} points)</strong>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.topographie %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" name="topographie_comp_{{ forloop.counter0 }}" id="topographie_comp_{{ forloop.counter0 }}" 
+                                                   {% if forloop.counter0 in topographie_competences_cochees %}checked{% endif %}>
+                                            {{ comp }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" name="topographie_contenus" 
+                                              placeholder="Décrivez les contenus suivis par le candidat...">{{ consistance.topographie_contenus }}</textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" name="topographie_commentaires" 
+                                              placeholder="Commentaires...">{{ consistance.topographie_commentaires }}</textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" name="topographie_note" 
+                                           min="0" max="{{ structure.topographie_note_max }}" required value="{% if consistance.topographie_note is not None %}{{ consistance.topographie_note }}{% endif %}"
+                                           placeholder="0-{{ structure.topographie_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Photogrammétrie obligatoire -->
+                            {% if 'photogrammetrie' not in structure.criteres_fixes_supprimes %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">3</td>
+                                <td class="critere-cell">
+                                    Photogrammétrie obligatoire<br>
+                                    <strong>({{ structure.photogrammetrie_note_max }} points)</strong>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.photogrammetrie %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" name="photogrammetrie_comp_{{ forloop.counter0 }}" id="photogrammetrie_comp_{{ forloop.counter0 }}" 
+                                                   {% if forloop.counter0 in photogrammetrie_competences_cochees %}checked{% endif %}>
+                                            {{ comp }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" name="photogrammetrie_contenus" 
+                                              placeholder="Décrivez les contenus suivis par le candidat...">{{ consistance.photogrammetrie_contenus }}</textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" name="photogrammetrie_commentaires" 
+                                              placeholder="Commentaires...">{{ consistance.photogrammetrie_commentaires }}</textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" name="photogrammetrie_note" 
+                                           min="0" max="{{ structure.photogrammetrie_note_max }}" required value="{% if consistance.photogrammetrie_note is not None %}{{ consistance.photogrammetrie_note }}{% endif %}"
+                                           placeholder="0-{{ structure.photogrammetrie_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Cartographie obligatoire -->
+                            {% if 'cartographie' not in structure.criteres_fixes_supprimes %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">4</td>
+                                <td class="critere-cell">
+                                    Cartographie obligatoire<br>
+                                    <strong>({{ structure.cartographie_note_max }} points)</strong>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.cartographie %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" name="cartographie_comp_{{ forloop.counter0 }}" id="cartographie_comp_{{ forloop.counter0 }}" 
+                                                   {% if forloop.counter0 in cartographie_competences_cochees %}checked{% endif %}>
+                                            {{ comp }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" name="cartographie_contenus" 
+                                              placeholder="Décrivez les contenus suivis par le candidat...">{{ consistance.cartographie_contenus }}</textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" name="cartographie_commentaires" 
+                                              placeholder="Commentaires...">{{ consistance.cartographie_commentaires }}</textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" name="cartographie_note" 
+                                           min="0" max="{{ structure.cartographie_note_max }}" required value="{% if consistance.cartographie_note is not None %}{{ consistance.cartographie_note }}{% endif %}"
+                                           placeholder="0-{{ structure.cartographie_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+
+
+                                                <!-- Droit foncier, cadastre et aménagements fonciers -->
+                            {% if 'droit_foncier' not in structure.criteres_fixes_supprimes %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">5</td>
+                                <td class="critere-cell">
+                                    Droit foncier, cadastre et aménagements fonciers obligatoires<br>
+                                    <strong>({{ structure.droit_foncier_note_max }} points)</strong>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.droit_foncier %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" name="droit_foncier_comp_{{ forloop.counter0 }}" id="droit_foncier_comp_{{ forloop.counter0 }}" 
+                                                   {% if forloop.counter0 in droit_foncier_competences_cochees %}checked{% endif %}>
+                                            {{ comp }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" name="droit_foncier_contenus" 
+                                              placeholder="Décrivez les contenus suivis par le candidat...">{{ consistance.droit_foncier_contenus }}</textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" name="droit_foncier_commentaires" 
+                                              placeholder="Commentaires...">{{ consistance.droit_foncier_commentaires }}</textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" name="droit_foncier_note" 
+                                           min="0" max="{{ structure.droit_foncier_note_max }}" required value="{% if consistance.droit_foncier_note is not None %}{{ consistance.droit_foncier_note }}{% endif %}"
+                                           placeholder="0-{{ structure.droit_foncier_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- SIG -->
+                            {% if 'sig' not in structure.criteres_fixes_supprimes %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">6</td>
+                                <td class="critere-cell">
+                                    Systèmes d'Information Géographique (SIG)<br>
+                                    <strong>({{ structure.sig_note_max }} points)</strong>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.sig %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" name="sig_comp_{{ forloop.counter0 }}" id="sig_comp_{{ forloop.counter0 }}" 
+                                                   {% if forloop.counter0 in sig_competences_cochees %}checked{% endif %}>
+                                            {{ comp }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" name="sig_contenus" 
+                                              placeholder="Décrivez les contenus suivis par le candidat...">{{ consistance.sig_contenus }}</textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" name="sig_commentaires" 
+                                              placeholder="Commentaires...">{{ consistance.sig_commentaires }}</textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" name="sig_note" 
+                                           min="0" max="{{ structure.sig_note_max }}" required value="{% if consistance.sig_note is not None %}{{ consistance.sig_note }}{% endif %}"
+                                           placeholder="0-{{ structure.sig_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Télédétection -->
+                            {% if 'teledetection' not in structure.criteres_fixes_supprimes %}
+                            <tr>
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">7</td>
+                                <td class="critere-cell">
+                                    Télédétection<br>
+                                    <strong>({{ structure.teledetection_note_max }} points)</strong>
+                                </td>
+                                <td class="competences-cell">
+                                    <ul class="competences-list">
+                                        <li class="main-item">Maîtrise :</li>
+                                        {% for comp in structure.competences_criteres_fixes.teledetection %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" name="teledetection_comp_{{ forloop.counter0 }}" id="teledetection_comp_{{ forloop.counter0 }}" 
+                                                   {% if forloop.counter0 in teledetection_competences_cochees %}checked{% endif %}>
+                                            {{ comp }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" name="teledetection_contenus" 
+                                              placeholder="Décrivez les contenus suivis par le candidat...">{{ consistance.teledetection_contenus }}</textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" name="teledetection_commentaires" 
+                                              placeholder="Commentaires...">{{ consistance.teledetection_commentaires }}</textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" name="teledetection_note" 
+                                           min="0" max="{{ structure.teledetection_note_max }}" required value="{% if consistance.teledetection_note is not None %}{{ consistance.teledetection_note }}{% endif %}"
+                                           placeholder="0-{{ structure.teledetection_note_max }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Critères personnalisés -->
+                            {% if structure.criteres_personnalises_globaux %}
+                            {% for critere in structure.criteres_personnalises_globaux %}
+                            <tr class="critere-personnalise">
+                                <td class="numero-cell" style="text-align: center; font-weight: bold;">{{ forloop.counter|add:7 }}</td>
+                                <td class="critere-cell">
+                                    {{ critere.nom }}<br>
+                                    <strong>({{ critere.note_max }} points)</strong>
+                                    {% if user.role == 'admin' %}
+                                    <div class="critere-actions">
+                                        <button type="submit" name="action_critere" value="supprimer" 
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce critère ?')"
+                                                class="btn-supprimer-critere">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </button>
+                                        <input type="hidden" name="critere_id" value="{{ critere.id }}">
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td class="competences-cell">
+                                    <div class="critere-personnalise-info">
+                                        <i class="fas fa-plus-circle"></i> Maîtrise :
+                                    </div>
+                                    <ul class="competences-list">
+                                        {% for comp in critere.compétences %}
+                                        <li class="sub-item">
+                                            <input type="checkbox" name="competence_{{ critere.id }}_{{ forloop.counter0 }}" id="competence_{{ critere.id }}_{{ forloop.counter0 }}" {% if forloop.counter0 in critere.competences_cochees %}checked{% endif %}>
+                                            {{ comp }}
+                                            {% if user.role == 'admin' %}
+                                            <button type="submit" name="supprimer_competence_{{ critere.id }}_{{ forloop.counter0 }}" class="btn-supprimer-critere" style="margin-left:8px;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% if user.role == 'admin' %}
+                                    <div class="ajouter-competence-form" style="margin-top:8px;">
+                                        <input type="text" name="nouvelle_competence_{{ critere.id }}" class="form-control" placeholder="Ajouter une compétence...">
+                                        <button type="submit" name="ajouter_competence_{{ critere.id }}" class="btn-ajouter-critere" style="margin-top:4px;">
+                                            <i class="fas fa-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td class="contenus-cell">
+                                    <textarea class="form-control textarea" name="contenus_critere_personnalise_{{ critere.id }}" 
+                                              placeholder="Décrivez les contenus suivis par le candidat...">{{ critere.contenus }}</textarea>
+                                </td>
+                                <td class="commentaires-cell">
+                                    <textarea class="form-control textarea" name="commentaires_critere_personnalise_{{ critere.id }}" 
+                                              placeholder="Commentaires...">{{ critere.commentaires }}</textarea>
+                                </td>
+                                <td class="notes-cell">
+                                    <input type="number" class="form-control note" name="note_critere_personnalise_{{ critere.id }}" 
+                                           min="0" max="{{ critere.note_max }}" value="{{ critere.note|default:'' }}" required
+                                           placeholder="0-{{ critere.note_max }}">
+                                    <div style="font-size:11px;color:#888;">Note à saisir manuellement</div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+
+
+
+                            <!-- Section pour ajouter un nouveau critère personnalisé (seuls les administrateurs) -->
+                            {% if user.role == 'admin' %}
+                            <tr class="ajouter-critere-section">
+                                <td colspan="6">
+                                    <div class="ajouter-critere-form">
+                                        <h5><i class="fas fa-plus-circle"></i> Ajouter un nouveau critère personnalisé (Administrateur uniquement)</h5>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="nom_critere_personnalise">Nom du critère :</label>
+                                                <input type="text" class="form-control" id="nom_critere_personnalise" 
+                                                       name="nom_critere_personnalise" placeholder="Ex: Informatique appliquée">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="note_max_critere_personnalise">Note maximale :</label>
+                                                <input type="number" class="form-control" id="note_max_critere_personnalise" 
+                                                       name="note_max_critere_personnalise" min="1" max="20" value="10">
+                                            </div>
+                                            <div class="form-group">
+                                                <button type="submit" name="action_critere" value="ajouter" class="btn-ajouter-critere">
+                                                    <i class="fas fa-plus"></i> Ajouter le critère
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    
+                    {% if user.role == 'professeur' %}
+                    <div class="alert alert-info" style="margin-top: 15px;">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Information :</strong> Seuls les administrateurs peuvent ajouter, modifier ou supprimer des critères personnalisés et des compétences. 
+                        Vous pouvez évaluer les critères existants en cochant les compétences acquises.
+                    </div>
+                    {% endif %}
+
+                    <!-- Section Stages et professionnalisation séparée -->
+                    <div class="stages-section" style="margin-top: 20px; padding: 15px; background: var(--color-off-white); border-radius: 6px; border-left: 3px solid var(--color-dark-maroon);">
+                        <h5 style="color: var(--color-dark-maroon); margin-bottom: 15px; font-size: 16px;">
+                            <i class="fas fa-briefcase"></i> Stages et professionnalisation avec rapports et attestations
+                        </h5>
+                        
+                        <!-- Nouveaux boutons pour l'état des stages -->
+                        <div style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 6px; border: 2px solid var(--color-light-taupe);">
+                            <h6 style="color: var(--color-dark-maroon); margin-bottom: 10px; font-size: 14px; font-weight: bold;">
+                                <i class="fas fa-check-circle"></i> État des stages du candidat :
+                            </h6>
+                            
+                            <div class="stages-buttons-container">
+                                <label class="stage-button stage-acheves {% if consistance.stages_acheves %}stage-button-active{% endif %}">
+                                    <input type="radio" name="stages_status" value="acheves" {% if consistance.stages_acheves %}checked{% endif %}>
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Stages achevés</strong>
+                                </label>
+                                
+                                <label class="stage-button stage-non-acheves {% if consistance.stages_non_acheves %}stage-button-active{% endif %}">
+                                    <input type="radio" name="stages_status" value="non_acheves" {% if consistance.stages_non_acheves %}checked{% endif %}>
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Stages non achevés</strong>
+                                </label>
+                            </div>
+                            
+                            <!-- Message pour stages non achevés -->
+                            <div id="message-stages-non-acheves" class="stages-warning-message {% if not consistance.stages_non_acheves %}d-none{% endif %}">
+                                <h6 class="stages-warning-title">
+                                    <i class="fas fa-exclamation-triangle"></i> Vous devez effectuer les stages :
+                                </h6>
+                                <textarea name="message_stages_non_acheves" class="form-control textarea" 
+                                          placeholder="Indiquez pourquoi les stages ne sont pas achevés et ce qui doit être fait..." 
+                                          rows="3">{{ consistance.message_stages_non_acheves }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 style="color: var(--color-black); margin-bottom: 10px; font-size: 14px;">Stages obligatoires :</h6>
+                                <div class="stages-list">
+                                    <!-- Stages par défaut -->
+                                    {% if 'stage_conservation_fonciere' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" name="stage_conservation_fonciere" id="stage_conservation_fonciere" 
+                                               {% if consistance.stage_conservation_fonciere %}checked{% endif %}>
+                                        <label for="stage_conservation_fonciere">Stage conservation foncière ANCFCC (1 semaine)</label>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if 'stage_cadastre' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" name="stage_cadastre" id="stage_cadastre" 
+                                               {% if consistance.stage_cadastre %}checked{% endif %}>
+                                        <label for="stage_cadastre">Stage cadastre ANCFCC (2 semaines)</label>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if 'stage_geodesie' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" name="stage_geodesie" id="stage_geodesie" 
+                                               {% if consistance.stage_geodesie %}checked{% endif %}>
+                                        <label for="stage_geodesie">Stage de Géodésie (2 semaines)</label>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if 'stage_topographie' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" name="stage_topographie" id="stage_topographie" 
+                                               {% if consistance.stage_topographie %}checked{% endif %}>
+                                        <label for="stage_topographie">Stage de Topographie (2 semaines)</label>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if 'stage_photogrammetrie' not in structure.stages_defaut_supprimes|default:"[]" %}
+                                    <div class="stage-item">
+                                        <input type="checkbox" name="stage_photogrammetrie" id="stage_photogrammetrie" 
+                                               {% if consistance.stage_photogrammetrie %}checked{% endif %}>
+                                        <label for="stage_photogrammetrie">Stage de Photogrammétrie (2 semaines)</label>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Stages configurables ajoutés par l'admin -->
+                                    {% if structure.stages_configurables %}
+                                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--color-light-taupe);">
+                                        <h6 style="color: var(--color-muted-gold); margin-bottom: 8px; font-size: 13px;">
+                                            <i class="fas fa-plus-circle"></i> Stages personnalisés :
+                                        </h6>
+                                        {% for stage in structure.stages_configurables %}
+                                        <div class="stage-item" style="background: #f8f9fa; border-left: 3px solid var(--color-muted-gold);">
+                                            <input type="checkbox" name="stage_configurable_{{ stage.id }}" id="stage_configurable_{{ stage.id }}" 
+                                                   {% if stage.id in consistance.stages_configurables_cochees|default:"[]" %}checked{% endif %}>
+                                            <label for="stage_configurable_{{ stage.id }}">{{ stage.nom }} ({{ stage.duree }})</label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="stages_contenus" style="font-weight: bold; color: var(--color-black); font-size: 12px;">Contenus des stages :</label>
+                                    <textarea class="form-control textarea" name="stages_contenus" id="stages_contenus"
+                                              placeholder="Décrivez les stages effectués..." rows="3">{{ consistance.stages_contenus }}</textarea>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="stages_commentaires" style="font-weight: bold; color: var(--color-black); font-size: 12px;">Commentaires :</label>
+                                    <textarea class="form-control textarea" name="stages_commentaires" id="stages_commentaires"
+                                              placeholder="Commentaires sur les stages..." rows="3">{{ consistance.stages_commentaires }}</textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="stages_note" style="font-weight: bold; color: var(--color-black); font-size: 12px;">Note Stages (0-10) :</label>
+                                    <input type="number" class="form-control note" name="stages_note" id="stages_note"
+                                           min="0" max="10" required value="{% if consistance.stages_note is not None %}{{ consistance.stages_note }}{% endif %}"
+                                           placeholder="0-10" style="width: 100px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="note-total">
+                        <h4><i class="fas fa-calculator"></i> Note Totale</h4>
+                        <div class="total-score">{{ consistance.note_totale|default:0 }} / 100</div>
+                                                  <small>Points maximum : 16 + 16 + 16 + 16 + 16 + 10 + 10 = 100 points (stages non notés)</small>
+                        
+                        <div class="interpretation-link" style="margin-top: 15px; text-align: center;">
+                            <a href="{% url 'dossiers:evaluation_equivalence' dossier.id %}" class="btn btn-info" style="background: var(--color-sage-green); border: none; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+                                <i class="fas fa-chart-line"></i> Voir l'interprétation des résultats
+                            </a>
+                            <p style="margin-top: 8px; font-size: 12px; color: var(--color-black);">
+                                Cliquez pour voir l'analyse détaillée et les recommandations basées sur cette note
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Sauvegarder la consistance académique
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // Gestion des boutons de stages
+        document.addEventListener('DOMContentLoaded', function() {
+            const radioButtons = document.querySelectorAll('input[name="stages_status"]');
+            const messageDiv = document.getElementById('message-stages-non-acheves');
+            
+            radioButtons.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'non_acheves') {
+                        messageDiv.style.display = 'block';
+                    } else {
+                        messageDiv.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Validation des notes obligatoires
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const noteInputs = document.querySelectorAll('input[type="number"].note[required]');
+                let notesManquantes = [];
+
+                noteInputs.forEach(function(input) {
+                    if (!input.value || input.value.trim() === '') {
+                        // Pour les critères fixes, chercher dans la cellule critere-cell
+                        let critereName = '';
+                        const critereCell = input.closest('tr').querySelector('.critere-cell');
+                        if (critereCell) {
+                            critereName = critereCell.textContent.trim().split('\n')[0];
+                        } else {
+                            // Pour les critères personnalisés, chercher dans la première cellule
+                            const firstCell = input.closest('tr').querySelector('td:first-child');
+                            if (firstCell) {
+                                critereName = firstCell.textContent.trim().split('\n')[0];
+                            }
+                        }
+                        if (critereName) {
+                            notesManquantes.push(critereName);
+                        }
+                    }
+                });
+
+                if (notesManquantes.length > 0) {
+                    e.preventDefault();
+                    alert('❌ ERREUR : Vous devez remplir TOUTES les notes obligatoires !\n\nNotes manquantes :\n' + notesManquantes.join('\n'));
+                    return false;
+                }
+
+                // Vérifier que les notes sont dans les limites
+                let notesInvalides = [];
+                noteInputs.forEach(function(input) {
+                    const value = parseFloat(input.value);
+                    const max = parseFloat(input.max);
+                    if (value < 0 || value > max) {
+                        // Pour les critères fixes, chercher dans la cellule critere-cell
+                        let critereName = '';
+                        const critereCell = input.closest('tr').querySelector('.critere-cell');
+                        if (critereCell) {
+                            critereName = critereCell.textContent.trim().split('\n')[0];
+                        } else {
+                            // Pour les critères personnalisés, chercher dans la première cellule
+                            const firstCell = input.closest('tr').querySelector('td:first-child');
+                            if (firstCell) {
+                                critereName = firstCell.textContent.trim().split('\n')[0];
+                        }
+                        }
+                        if (critereName) {
+                            notesInvalides.push(`${critereName}: ${value} (max: ${max})`);
+                        }
+                    }
+                });
+
+                if (notesInvalides.length > 0) {
+                    e.preventDefault();
+                    alert('❌ ERREUR : Certaines notes sont hors limites !\n\nNotes invalides :\n' + notesInvalides.join('\n'));
+                    return false;
+                }
+
+                alert('✅ Validation réussie ! Sauvegarde en cours...');
+            });
+        });
+    </script>
+
+<style>
+.stages-warning-message {
+    margin-top: 15px;
+    padding: 15px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    border-left: 4px solid #ffc107;
+}
+
+.stages-warning-title {
+    color: #856404;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: bold;
+}
+</style>
+</body>
+</html> 

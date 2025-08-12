@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Affecter le dossier{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-user-plus"></i> Affecter le dossier</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Informations du dossier -->
+                    <div class="mb-4">
+                        <h5><i class="fas fa-folder"></i> Informations du dossier</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Titre :</strong> {{ dossier.titre }}</p>
+                                <p><strong>Date de réception :</strong> {{ dossier.date_reception|date:"d/m/Y" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Statut actuel :</strong> 
+                                    <span class="badge bg-{% if dossier.statut == 'non_traite' %}warning{% elif dossier.statut == 'en_cours' %}info{% elif dossier.statut == 'traite' %}success{% else %}secondary{% endif %}">
+                                        {{ dossier.get_statut_display }}
+                                    </span>
+                                </p>
+                                <p><strong>Professeurs actuels :</strong>
+                                    {% for professeur in dossier.professeurs.all %}
+                                        <span class="badge bg-primary me-1">{{ professeur.username }}</span>
+                                    {% empty %}
+                                        <span class="text-muted">Aucun professeur assigné</span>
+                                    {% endfor %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulaire d'affectation -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="professeurs" class="form-label">Sélectionner les professeurs *</label>
+                            <select name="professeurs" id="professeurs" class="form-select" multiple required>
+                                {% for professeur in professeurs %}
+                                    <option value="{{ professeur.id }}" 
+                                        {% if professeur in dossier.professeurs.all %}selected{% endif %}>
+                                        {{ professeur.username }} 
+                                        {% if professeur.first_name or professeur.last_name %}
+                                            ({{ professeur.first_name }} {{ professeur.last_name }})
+                                        {% endif %}
+                                    </option>
+                                {% empty %}
+                                    <option disabled>Aucun professeur disponible</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Maintenez Ctrl (ou Cmd sur Mac) pour sélectionner plusieurs professeurs
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="commentaire" class="form-label">Commentaire (optionnel)</label>
+                            <textarea name="commentaire" id="commentaire" class="form-control" rows="3" 
+                                placeholder="Ajouter un commentaire sur l'affectation...">{{ commentaire|default:'' }}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'dossiers:dossier_detail' dossier.id %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Affecter le dossier
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Statistiques des professeurs -->
+            {% if professeurs %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> Charge de travail des professeurs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Professeur</th>
+                                    <th>Dossiers en cours</th>
+                                    <th>Dossiers traités</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in professeurs_stats %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ stat.professeur.username }}</strong>
+                                        {% if stat.professeur.first_name or stat.professeur.last_name %}
+                                            <br><small class="text-muted">{{ stat.professeur.first_name }} {{ stat.professeur.last_name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ stat.dossiers_en_cours }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ stat.dossiers_traites }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ stat.total_dossiers }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        background-color: var(--color-light-taupe);
+        border-bottom: 1px solid var(--color-muted-gold);
+    }
+    
+    .form-select[multiple] {
+        min-height: 120px;
+    }
+    
+    .badge {
+        font-size: 0.875em;
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: var(--color-dark-maroon);
+    }
+</style>
+{% endblock %} 

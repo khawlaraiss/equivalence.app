@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirmer la suppression - {{ dossier.titre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-exclamation-triangle text-danger"></i> Confirmer la suppression</h2>
+                <a href="{% url 'dossiers:dossiers_traites_admin' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                </a>
+            </div>
+
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-trash"></i> Suppression du dossier traité</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Attention !</h6>
+                        <p class="mb-0">Vous êtes sur le point de supprimer définitivement le dossier traité suivant :</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Informations du dossier :</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Numéro :</strong> {{ dossier.numero }}</li>
+                                <li><strong>Demandeur :</strong> {{ dossier.demandeur_candidat }}</li>
+                                <li><strong>Diplôme :</strong> {{ dossier.diplome }}</li>
+                                <li><strong>Université :</strong> {{ dossier.universite }}</li>
+                                <li><strong>Pays :</strong> {{ dossier.pays }}</li>
+                                <li><strong>Date de réception :</strong> {{ dossier.date_reception|date:"d/m/Y" }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Éléments qui seront supprimés :</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-times text-danger"></i> Le dossier traité</li>
+                                <li><i class="fas fa-times text-danger"></i> Toutes les réunions associées</li>
+                                <li><i class="fas fa-times text-danger"></i> L'historique des actions</li>
+                                <li><i class="fas fa-times text-danger"></i> Les notifications liées</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-danger mt-3">
+                        <h6><i class="fas fa-exclamation-circle"></i> Cette action est irréversible !</h6>
+                        <p class="mb-0">Une fois supprimé, ce dossier traité ne pourra plus être récupéré.</p>
+                    </div>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'dossiers:dossiers_traites_admin' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous vraiment sûr de vouloir supprimer ce dossier traité ?')">
+                                <i class="fas fa-trash"></i> Confirmer la suppression
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
